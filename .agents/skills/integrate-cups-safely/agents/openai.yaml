@@ -1,0 +1,4 @@
+interface:
+  display_name: "Integrar CUPS com segurança"
+  short_description: "Descobrir e usar recursos reais do CUPS"
+  default_prompt: "Use $integrate-cups-safely para implementar ou revisar a integração do Easy Print com o CUPS."

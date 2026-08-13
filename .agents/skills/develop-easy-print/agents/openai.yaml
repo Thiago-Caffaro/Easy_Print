@@ -1,0 +1,4 @@
+interface:
+  display_name: "Desenvolver Easy Print"
+  short_description: "Implementar recursos com arquitetura enxuta"
+  default_prompt: "Use $develop-easy-print para implementar a próxima funcionalidade do Easy Print."

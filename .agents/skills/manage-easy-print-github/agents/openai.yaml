@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gerenciar Easy Print no GitHub"
+  short_description: "Organizar Issues, Projects e Wiki do projeto"
+  default_prompt: "Use $manage-easy-print-github para organizar este trabalho no GitHub Projects e atualizar a Wiki."
