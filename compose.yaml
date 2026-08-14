@@ -1,0 +1,73 @@
+name: easy-print
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    depends_on:
+      cups:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_BASE_PATH: ${APP_BASE_PATH:-}
+      APP_LOCALE: ${APP_LOCALE:-pt-BR}
+      APP_ENABLED_LOCALES: ${APP_ENABLED_LOCALES:-pt-BR,en}
+      CUPS_HOST: cups
+      CUPS_PORT: "631"
+      CUPS_ENCRYPTION: never
+      CUPS_SERVER_KEY: primary
+      DATABASE_PATH: /var/lib/easy-print/easy-print.sqlite
+      TEMPORARY_PATH: /var/lib/easy-print/tmp
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-26214400}
+      TEMP_FILE_TTL_SECONDS: ${TEMP_FILE_TTL_SECONDS:-3600}
+      HISTORY_RETENTION_DAYS: ${HISTORY_RETENTION_DAYS:-90}
+      ERROR_RETENTION_DAYS: ${ERROR_RETENTION_DAYS:-30}
+      CAPABILITY_CACHE_TTL_SECONDS: ${CAPABILITY_CACHE_TTL_SECONDS:-60}
+      PROCESS_TIMEOUT_SECONDS: ${PROCESS_TIMEOUT_SECONDS:-15}
+      PROCESS_OUTPUT_MAX_BYTES: ${PROCESS_OUTPUT_MAX_BYTES:-262144}
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+    volumes:
+      - easy_print_data:/var/lib/easy-print
+    tmpfs:
+      - /var/lib/easy-print/tmp:uid=10001,gid=10001,mode=0770
+      - /tmp:uid=10001,gid=10001,mode=1770
+    networks:
+      - backend
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    restart: unless-stopped
+
+  cups:
+    build:
+      context: .
+      dockerfile: docker/cups/Dockerfile
+    hostname: cups
+    ports:
+      - "${CUPS_BIND_ADDRESS:-127.0.0.1}:${CUPS_PUBLIC_PORT:-631}:631"
+    volumes:
+      - cups_config:/etc/cups
+      - cups_spool:/var/spool/cups
+    tmpfs:
+      - /run
+      - /tmp
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  easy_print_data:
+  cups_config:
+  cups_spool:
