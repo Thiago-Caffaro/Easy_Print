@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a user-visible improvement within the product boundaries.
+title: "[Feature]: "
+labels: ["type: feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the user or operational problem without prescribing a solution first.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What observable result should exist?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List verifiable criteria.
+      value: "- [ ] "
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Scope boundaries and alternatives
+  - type: dropdown
+    id: printer_dependency
+    attributes:
+      label: Does validation require a real CUPS server or printer?
+      options: ["No", "CUPS only", "CUPS and a physical printer", "Unknown"]
+    validations:
+      required: true

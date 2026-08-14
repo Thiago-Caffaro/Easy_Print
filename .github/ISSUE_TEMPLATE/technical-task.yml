@@ -1,0 +1,36 @@
+name: Technical task or discovery
+description: Propose infrastructure, quality, documentation, or uncertainty-reduction work.
+title: "[Task]: "
+labels: ["type: task"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: State the artifact, evidence, or capability this task must produce.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and constraints
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: "- [ ] "
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Explain how completion can be demonstrated without unsafe side effects.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and risks

@@ -1,40 +1,47 @@
-# Easy Print — instruções do repositório
+# Easy Print repository instructions
 
-## Produto
+## Product
 
-- Construir uma interface web interna para a fila CUPS `EPSON_L4150_Series`.
-- Tratar o CUPS como fonte de verdade para impressora, capacidades, fila e jobs.
-- Manter a aplicação pequena: PHP 8.x, Slim 4, HTML/CSS renderizado no servidor, HTMX e JavaScript mínimo.
-- Não presumir recursos da impressora. Detectar opções reais via CUPS/IPP/PPD e adaptar a interface.
-- Manter scanner fora do MVP de impressão e como módulo opcional separado.
+- Build a small, self-hosted web interface for printer queues exposed by CUPS.
+- Keep the domain printer-agnostic. The Epson L4150 is the first reference device, not a hardcoded product boundary.
+- Treat CUPS as the source of truth for queues, printer state, capabilities, and print jobs.
+- Discover and consume queues already configured in CUPS; do not administer printers in the MVP.
+- Target Linux Docker first and TrueNAS SCALE second. AMD64 is the only required architecture for v1.0.
+- Use PHP 8.5, Slim 4, server-rendered HTML/CSS, HTMX, and minimal JavaScript.
+- Ship a Portuguese interface first and keep all user-facing strings translation-ready for English.
+- Support PDF, PNG, and JPEG in the MVP. Keep scanning and office-document conversion outside the MVP.
 
-## Forma de trabalhar
+## Working agreements
 
-- Implementar a menor fatia vertical que satisfaça critérios de aceitação observáveis.
-- Preferir código explícito e composição simples a abstrações antecipadas.
-- Não adicionar framework, serviço, banco ou dependência de produção sem necessidade demonstrável.
-- Preservar separação entre HTTP, domínio da aplicação, integração CUPS e persistência.
-- Atualizar testes e documentação afetados na mesma mudança.
-- Executar os comandos de validação definidos pelo projeto antes de concluir. Se ainda não existirem, registrar essa lacuna sem inventar sucesso.
+- Implement the smallest vertical slice that satisfies observable acceptance criteria.
+- Prefer explicit composition over speculative abstractions.
+- Keep HTTP, application, domain, CUPS integration, filesystem, and persistence concerns separated.
+- Do not add a framework, service, database, or production dependency without a demonstrated need.
+- Update affected tests and versioned documentation in the same change.
+- Run the repository validation commands before completing work. Report missing tooling honestly.
 
-## Segurança obrigatória
+## Security requirements
 
-- Nunca concatenar entrada do usuário em comandos de shell.
-- Executar processos com executável e argumentos separados, timeout e captura de stdout, stderr e código de saída.
-- Validar impressora, opções CUPS e valores por allowlists derivadas das capacidades detectadas.
-- Validar uploads por tamanho, extensão e conteúdo/MIME no servidor; usar nomes aleatórios e armazenamento fora do webroot.
-- Exigir CSRF em operações mutáveis e não expor detalhes internos em erros enviados ao navegador.
+- Never concatenate user input into shell commands.
+- Execute allowed programs with separated arguments, timeouts, and captured exit code/stdout/stderr.
+- Validate printer queues, option names, and option values against capabilities discovered from CUPS.
+- Validate uploads by size, extension, and server-side content inspection. Use random names outside the webroot.
+- Delete uploaded documents after the CUPS spool accepts them. Persist metadata and sanitized errors only.
+- Require CSRF protection for mutations and keep internal exception details out of browser responses.
+- Assume deployment on a trusted LAN/Tailscale network without application-level login in v1.0.
 
-## Documentação e planejamento
+## GitHub workflow
 
-- Usar Issues para trabalho acionável e critérios de aceitação.
-- Usar GitHub Projects para estado, prioridade, visão de backlog e roadmap; não duplicar esses dados em documentos.
-- Usar a Wiki para arquitetura explicativa, decisões operacionais e runbooks duráveis.
-- Manter no repositório tudo que precisa mudar junto com o código: README, configuração de exemplo, contratos, migrações e instruções de teste.
+- Write documentation, Issues, pull requests, commits, code comments, and repository metadata in English.
+- Use Issues for actionable work and acceptance criteria.
+- Use GitHub Projects for status, priority, size, area, and phase. Do not duplicate those fields in labels.
+- Use the Wiki for durable explanatory architecture and operations documentation.
+- Keep version-coupled material in the repository: README, configuration examples, ADRs, migrations, tests, and release notes.
+- Work through focused branches and pull requests. Keep `main` protected and releasable.
 
-## Code Review Rules
+## Code review rules
 
-- Sinalizar como bloqueante qualquer caminho que permita injeção de comando, opção CUPS arbitrária ou acesso a arquivo fora do diretório permitido.
-- Sinalizar capacidades de impressora hardcodadas sem evidência em fixture ou descoberta real.
-- Exigir teste para parsers de saída do CUPS, validação de opções e transições de jobs.
-- Evitar aprovar complexidade estrutural sem um caso de uso atual que a justifique.
+- Block command injection, arbitrary CUPS options, path traversal, or files stored inside the public webroot.
+- Block hardcoded printer capabilities without evidence from a fixture or live discovery.
+- Require tests for CUPS parsers, option validation, upload validation, and job state transitions.
+- Challenge structural complexity that does not serve a current use case.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Thiago-Caffaro/Easy_Print/security/advisories/new
+    about: Report security issues privately instead of opening a public Issue.
+  - name: Project documentation
+    url: https://github.com/Thiago-Caffaro/Easy_Print/wiki
+    about: Review architecture, scope, deployment, and troubleshooting guidance.
