@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="220" viewBox="0 0 520 220" role="img" aria-labelledby="title desc">
+  <title id="title">Easy Print</title>
+  <desc id="desc">A printer icon with flowing paper and the Easy Print wordmark.</desc>
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="30" y="44" width="160" height="124" rx="26" fill="url(#brand)"/>
+    <path d="M69 28h82a13 13 0 0 1 13 13v45H56V41a13 13 0 0 1 13-13Z" fill="#fff"/>
+    <path d="M62 126h96v58a14 14 0 0 1-14 14H76a14 14 0 0 1-14-14Z" fill="#f8fafc"/>
+    <path d="M80 148h60M80 169h44" stroke="#2563eb" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="158" cy="110" r="8" fill="#99f6e4"/>
+  </g>
+  <text x="222" y="111" fill="#0f172a" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="57" font-weight="760" letter-spacing="-2">Easy Print</text>
+  <text x="225" y="148" fill="#475569" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="500">A calmer interface for CUPS</text>
+</svg>

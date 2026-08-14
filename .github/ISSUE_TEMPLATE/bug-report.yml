@@ -1,0 +1,54 @@
+name: Bug report
+description: Report reproducible behavior that differs from the documented contract.
+title: "[Bug]: "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Easy Print. Do not include private documents, credentials, or unredacted logs.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Observed behavior
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest safe sequence that reproduces the problem.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Easy Print version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Linux distribution, Docker version, CUPS version, deployment type, and browser.
+    validations:
+      required: true
+  - type: textarea
+    id: printer
+    attributes:
+      label: Queue and capability context
+      description: Sanitized queue/driver information. Never attach documents or secrets.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed document contents, credentials, private addresses, and unnecessary personal data.
+          required: true
+        - label: This is not a security vulnerability. Security reports follow SECURITY.md.
+          required: true
