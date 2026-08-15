@@ -12,6 +12,13 @@ declare(strict_types=1);
  * @var string                  $statusValue
  * @var string                  $environmentLabel
  * @var string                  $environmentValue
+ * @var string                  $cupsLabel
+ * @var string                  $cupsValue
+ * @var string                  $queuesHeading
+ * @var string                  $noQueuesMessage
+ * @var string                  $selectedLabel
+ * @var string                  $defaultLabel
+ * @var list<array{identifier:string,stateLabel:string,selected:bool,default:bool,href:string}> $queues
  * @var string                  $languageLabel
  * @var string                  $portugueseLabel
  * @var string                  $englishLabel
@@ -41,7 +48,44 @@ declare(strict_types=1);
                     <dt><?= $escape($environmentLabel) ?></dt>
                     <dd><?= $escape($environmentValue) ?></dd>
                 </div>
+                <div>
+                    <dt><?= $escape($cupsLabel) ?></dt>
+                    <dd><?= $escape($cupsValue) ?></dd>
+                </div>
             </dl>
+
+            <section class="queues" aria-labelledby="queues-heading">
+                <h2 id="queues-heading"><?= $escape($queuesHeading) ?></h2>
+
+                <?php if ([] === $queues): ?>
+                    <p class="empty-state"><?= $escape($noQueuesMessage) ?></p>
+                <?php else: ?>
+                    <ul class="queue-list">
+                        <?php foreach ($queues as $queue): ?>
+                            <li>
+                                <a
+                                    class="queue-option<?= $queue['selected'] ? ' is-selected' : '' ?>"
+                                    href="<?= $escape($queue['href']) ?>"
+                                    <?= $queue['selected'] ? 'aria-current="true"' : '' ?>
+                                >
+                                    <span>
+                                        <strong><?= $escape($queue['identifier']) ?></strong>
+                                        <small><?= $escape($queue['stateLabel']) ?></small>
+                                    </span>
+                                    <span class="queue-badges">
+                                        <?php if ($queue['default']): ?>
+                                            <span class="badge"><?= $escape($defaultLabel) ?></span>
+                                        <?php endif; ?>
+                                        <?php if ($queue['selected']): ?>
+                                            <span class="badge badge-selected"><?= $escape($selectedLabel) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </section>
 
             <nav aria-label="<?= $escape($languageLabel) ?>" class="languages">
                 <a href="?lang=pt-BR" lang="pt-BR" hreflang="pt-BR"><?= $escape($portugueseLabel) ?></a>

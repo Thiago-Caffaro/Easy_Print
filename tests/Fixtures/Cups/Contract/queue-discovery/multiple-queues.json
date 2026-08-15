@@ -9,11 +9,17 @@
     },
     "queues": {
       "stdout": "REFERENCE_QUEUE\nWAREHOUSE_LABELS\n"
+    },
+    "states": {
+      "stdout": "printer REFERENCE_QUEUE is idle. enabled since Thu 01 Jan 1970 00:00:00 UTC\nprinter WAREHOUSE_LABELS now printing WAREHOUSE_LABELS-42. enabled since Thu 01 Jan 1970 00:00:00 UTC\n"
     }
   },
   "expected": {
     "connectivity": "available",
     "defaultQueueIdentifier": "REFERENCE_QUEUE",
-    "queueIdentifiers": ["REFERENCE_QUEUE", "WAREHOUSE_LABELS"]
+    "queues": [
+      { "identifier": "REFERENCE_QUEUE", "state": "ready" },
+      { "identifier": "WAREHOUSE_LABELS", "state": "processing" }
+    ]
   }
 }

@@ -10,11 +10,14 @@ For the configured CUPS server, the adapter executes these argument arrays throu
 lpstat -h <host>:<port> -r
 lpstat -h <host>:<port> -d
 lpstat -h <host>:<port> -e
+lpstat -h <host>:<port> -p
 ```
 
 `-E` is prepended when `CUPS_ENCRYPTION=required`. IPv6 literals are bracketed before the port is appended. The host and port come only from validated runtime configuration; browser input never reaches these arguments.
 
-The three calls deliberately avoid device URIs, job names, and other fields that are unnecessary for discovery and may contain private identifiers.
+The first three calls establish scheduler availability, the default destination, and queue identifiers. The fourth maps each current queue to `ready`, `processing`, `stopped`, `unavailable`, or `unknown`. It runs only when at least one queue exists.
+
+These calls deliberately avoid device URIs, document names, completed jobs, and other fields that are unnecessary for discovery and may contain private identifiers.
 
 ## Result contract
 
@@ -28,7 +31,7 @@ A snapshot always reports one connectivity state:
 | `timed_out` | The bounded process deadline expired |
 | `malformed_response` | Successful output was unrecognized, duplicated, invalid, or exceeded the output bound |
 
-Only an available snapshot can contain queue identifiers or a default identifier. Queue identifiers are treated as opaque strings, retain their output order, and must be escaped at the later HTML rendering boundary.
+Only an available snapshot can contain queues or a default identifier. Queue identifiers are treated as opaque strings, retain their output order, and are escaped at the HTML rendering boundary. A failed state lookup does not misreport the already-reached scheduler as offline: known queues remain in the snapshot with `unavailable` state, while unrecognized successful state output becomes `unknown`.
 
 Raw stdout and stderr do not cross into the domain result. Operational logging will use sanitized error codes in the observability phase.
 

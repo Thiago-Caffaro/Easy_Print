@@ -6,6 +6,9 @@ namespace EasyPrint\Infrastructure\Cups;
 
 use function array_values;
 use function count;
+
+use EasyPrint\Domain\Printer\PrinterState;
+
 use function preg_match;
 use function preg_split;
 use function rtrim;
@@ -60,6 +63,48 @@ final class LpstatOutputParser
         }
 
         return $identifiers;
+    }
+
+    /**
+     * @param list<string> $queueIdentifiers
+     *
+     * @return array<string,PrinterState>
+     */
+    public function queueStates(string $output, array $queueIdentifiers): array
+    {
+        $states = array_fill_keys($queueIdentifiers, PrinterState::Unavailable);
+
+        if ('' === trim($output)) {
+            return $states;
+        }
+
+        $lines = preg_split('/\r\n|\n|\r/', rtrim($output, "\r\n"));
+
+        if (false === $lines) {
+            return array_fill_keys($queueIdentifiers, PrinterState::Unknown);
+        }
+
+        foreach ($lines as $line) {
+            foreach ($queueIdentifiers as $identifier) {
+                $prefix = 'printer ' . $identifier . ' ';
+
+                if (!str_starts_with($line, $prefix)) {
+                    continue;
+                }
+
+                $stateText = substr($line, strlen($prefix));
+                $states[$identifier] = match (true) {
+                    str_starts_with($stateText, 'is idle.') => PrinterState::Ready,
+                    str_starts_with($stateText, 'now printing ') => PrinterState::Processing,
+                    str_starts_with($stateText, 'disabled since ') => PrinterState::Stopped,
+                    default => PrinterState::Unknown,
+                };
+
+                break;
+            }
+        }
+
+        return $states;
     }
 
     private function queueIdentifier(string $identifier): string

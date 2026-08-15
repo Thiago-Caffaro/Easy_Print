@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace EasyPrint\Tests\Unit\Infrastructure\Cups;
 
+use EasyPrint\Domain\Printer\PrinterState;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
 use EasyPrint\Infrastructure\Cups\MalformedLpstatOutput;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -41,6 +42,25 @@ final class LpstatOutputParserTest extends TestCase
     public function testAnEmptyQueueListIsValid(): void
     {
         self::assertSame([], $this->parser->queueIdentifiers(''));
+    }
+
+    public function testItNormalizesKnownQueueStatesAndMarksMissingQueuesUnavailable(): void
+    {
+        $states = $this->parser->queueStates(
+            "printer READY is idle. enabled since date\n"
+            . "printer BUSY now printing BUSY-42. enabled since date\n"
+            . "printer STOPPED disabled since date - reason\n"
+            . "printer MYSTERY has a future state\n",
+            ['READY', 'BUSY', 'STOPPED', 'MYSTERY', 'REMOVED'],
+        );
+
+        self::assertSame([
+            'READY' => PrinterState::Ready,
+            'BUSY' => PrinterState::Processing,
+            'STOPPED' => PrinterState::Stopped,
+            'MYSTERY' => PrinterState::Unknown,
+            'REMOVED' => PrinterState::Unavailable,
+        ], $states);
     }
 
     #[DataProvider('malformedOutputProvider')]

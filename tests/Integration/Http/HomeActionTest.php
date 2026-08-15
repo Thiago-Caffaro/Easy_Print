@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace EasyPrint\Tests\Integration\Http;
 
 use function dirname;
+
+use EasyPrint\Domain\Printer\CupsConnectivity;
+use EasyPrint\Domain\Printer\PrinterQueue;
+use EasyPrint\Domain\Printer\PrinterState;
+use EasyPrint\Domain\Printer\QueueSnapshot;
+use EasyPrint\Tests\Support\FakeQueueDiscovery;
+
 use function mkdir;
 
 use PHPUnit\Framework\TestCase;
@@ -34,7 +41,7 @@ final class HomeActionTest extends TestCase
             'APP_ENV' => 'testing',
             'DATABASE_PATH' => $this->runtimeDirectory . '/database/easy-print.sqlite',
             'TEMPORARY_PATH' => $this->runtimeDirectory . '/temporary',
-        ], $root);
+        ], $root, new FakeQueueDiscovery($this->snapshot()));
     }
 
     protected function tearDown(): void
@@ -64,6 +71,9 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('<html lang="pt-BR">', $body);
         self::assertStringContainsString('Easy Print está pronto para começar', $body);
         self::assertStringContainsString('Configuração válida', $body);
+        self::assertStringContainsString('REFERENCE_QUEUE', $body);
+        self::assertStringContainsString('Pronta', $body);
+        self::assertStringContainsString('easy_print_queue=REFERENCE_QUEUE', $response->getHeaderLine('Set-Cookie'));
     }
 
     public function testTheHealthPageCanBeRenderedFromTheEnglishCatalog(): void
@@ -78,5 +88,45 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('<html lang="en">', $body);
         self::assertStringContainsString('Easy Print is ready to begin', $body);
         self::assertStringContainsString('Valid configuration', $body);
+        self::assertStringContainsString('Ready', $body);
+    }
+
+    public function testARequestedQueueIsValidatedSelectedEscapedAndPersisted(): void
+    {
+        $request = new ServerRequestFactory()
+            ->createServerRequest('GET', '/?queue=%3Cunsafe%3E')
+            ->withQueryParams(['queue' => '<unsafe>']);
+
+        $response = $this->application->handle($request);
+        $body = (string) $response->getBody();
+
+        self::assertStringNotContainsString('<unsafe>', $body);
+        self::assertStringContainsString('&lt;unsafe&gt;', $body);
+        self::assertStringContainsString('easy_print_queue=%3Cunsafe%3E', $response->getHeaderLine('Set-Cookie'));
+    }
+
+    public function testAValidCookieSurvivesNavigationWithoutBeingRewritten(): void
+    {
+        $request = new ServerRequestFactory()
+            ->createServerRequest('GET', '/')
+            ->withCookieParams(['easy_print_queue' => '<unsafe>']);
+
+        $response = $this->application->handle($request);
+        $body = (string) $response->getBody();
+
+        self::assertStringContainsString('&lt;unsafe&gt;', $body);
+        self::assertSame('', $response->getHeaderLine('Set-Cookie'));
+    }
+
+    private function snapshot(): QueueSnapshot
+    {
+        return new QueueSnapshot(
+            connectivity: CupsConnectivity::Available,
+            queues: [
+                new PrinterQueue('REFERENCE_QUEUE', PrinterState::Ready),
+                new PrinterQueue('<unsafe>', PrinterState::Unknown),
+            ],
+            defaultQueueIdentifier: 'REFERENCE_QUEUE',
+        );
     }
 }
