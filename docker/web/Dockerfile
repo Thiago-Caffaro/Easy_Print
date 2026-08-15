@@ -12,7 +12,6 @@ COPY --from=composer:2.10.2 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install \
-    --classmap-authoritative \
     --no-dev \
     --no-interaction \
     --no-progress \
