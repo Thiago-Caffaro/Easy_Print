@@ -19,4 +19,4 @@ The maintainer will acknowledge a complete report as soon as practical, validate
 
 ## Security boundary
 
-v1.0 is intended for a trusted LAN or Tailscale network and has no application login. It must not be exposed directly to the public internet. Deployments remain responsible for network access controls, TLS termination, host security, CUPS hardening, driver provenance, and timely updates.
+v1.0 is intended for a trusted LAN or Tailscale network and has no application login. It must not be exposed directly to the public internet. Deployments remain responsible for network access controls, TLS termination, host security, CUPS hardening, driver provenance, and timely updates. Follow the versioned [private network deployment patterns](docs/network-deployment.md); Tailscale Funnel and equivalent public tunnels are explicitly unsupported.
