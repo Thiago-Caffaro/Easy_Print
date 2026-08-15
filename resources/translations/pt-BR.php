@@ -30,4 +30,12 @@ return [
     'printer.state.stopped' => 'Parada',
     'printer.state.unavailable' => 'Indisponível',
     'printer.state.unknown' => 'Estado desconhecido',
+    'upload.error.invalid_extension' => 'Envie um arquivo com extensão PDF.',
+    'upload.error.invalid_name' => 'O nome do arquivo enviado é inválido.',
+    'upload.error.invalid_pdf' => 'O PDF está incompleto ou possui uma estrutura inválida.',
+    'upload.error.mime_mismatch' => 'O conteúdo enviado não foi reconhecido como PDF.',
+    'upload.error.missing' => 'Selecione um arquivo PDF para enviar.',
+    'upload.error.storage_unavailable' => 'Não foi possível armazenar o arquivo com segurança.',
+    'upload.error.too_large' => 'O arquivo excede o tamanho máximo permitido.',
+    'upload.error.upload_failed' => 'O envio do arquivo não foi concluído.',
 ];
