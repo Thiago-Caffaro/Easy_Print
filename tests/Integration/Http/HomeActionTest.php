@@ -23,6 +23,7 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 
 use function sys_get_temp_dir;
 use function uniqid;
+use function unlink;
 
 final class HomeActionTest extends TestCase
 {
@@ -46,6 +47,10 @@ final class HomeActionTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (is_file($this->runtimeDirectory . '/temporary/csrf-secret')) {
+            unlink($this->runtimeDirectory . '/temporary/csrf-secret');
+        }
+
         if (is_dir($this->runtimeDirectory . '/temporary')) {
             rmdir($this->runtimeDirectory . '/temporary');
         }
@@ -74,6 +79,10 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('REFERENCE_QUEUE', $body);
         self::assertStringContainsString('Pronta', $body);
         self::assertStringContainsString('easy_print_queue=REFERENCE_QUEUE', $response->getHeaderLine('Set-Cookie'));
+        self::assertStringContainsString('easy_print_session=', $response->getHeaderLine('Set-Cookie'));
+        self::assertStringContainsString('HttpOnly; SameSite=Strict', $response->getHeaderLine('Set-Cookie'));
+        self::assertSame("default-src 'self'; base-uri 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
     }
 
     public function testTheHealthPageCanBeRenderedFromTheEnglishCatalog(): void
@@ -115,7 +124,7 @@ final class HomeActionTest extends TestCase
         $body = (string) $response->getBody();
 
         self::assertStringContainsString('&lt;unsafe&gt;', $body);
-        self::assertSame('', $response->getHeaderLine('Set-Cookie'));
+        self::assertStringNotContainsString('easy_print_queue=', $response->getHeaderLine('Set-Cookie'));
     }
 
     private function snapshot(): QueueSnapshot

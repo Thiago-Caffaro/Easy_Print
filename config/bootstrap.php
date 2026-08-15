@@ -5,12 +5,17 @@ declare(strict_types=1);
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
 use EasyPrint\Http\Action\HomeAction;
+use EasyPrint\Http\Middleware\CsrfProtectionMiddleware;
+use EasyPrint\Http\Middleware\RequestLimitsMiddleware;
+use EasyPrint\Http\Middleware\SecurityHeadersMiddleware;
 use EasyPrint\Http\QueueSelectionCookie;
+use EasyPrint\Http\Security\CsrfTokenManager;
 use EasyPrint\Infrastructure\Configuration\ConfigurationLoader;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatQueueDiscovery;
 use EasyPrint\Infrastructure\Filesystem\RuntimeDirectories;
 use EasyPrint\Infrastructure\Process\AllowedProcessRunner;
+use EasyPrint\Infrastructure\Security\RuntimeSecret;
 use EasyPrint\Translation\LocaleResolver;
 use EasyPrint\Translation\Translator;
 use EasyPrint\Views\PhpRenderer;
@@ -48,7 +53,7 @@ return static function (
         config: $config,
         queueDiscovery: $queueDiscovery,
         selectionResolver: new QueueSelectionResolver(),
-        selectionCookie: new QueueSelectionCookie($config->basePath),
+        selectionCookie: new QueueSelectionCookie($config->basePath, $config->cookieSecure),
         localeResolver: $localeResolver,
         translator: $translator,
         renderer: $renderer,
@@ -62,7 +67,19 @@ return static function (
 
     $app->get('/', $homeAction);
     $app->addRoutingMiddleware();
+    $app->add(new CsrfProtectionMiddleware(
+        tokens: new CsrfTokenManager(RuntimeSecret::loadOrCreate($config->temporaryPath . '/csrf-secret')),
+        responses: $app->getResponseFactory(),
+        basePath: $config->basePath,
+        secureCookie: $config->cookieSecure,
+    ));
+    $app->add(new RequestLimitsMiddleware(
+        responses: $app->getResponseFactory(),
+        maximumBodyBytes: $config->requestBodyMaxBytes,
+        maximumHeaderBytes: $config->requestHeaderMaxBytes,
+    ));
     $app->addErrorMiddleware(false, true, true);
+    $app->add(new SecurityHeadersMiddleware());
 
     return $app;
 };

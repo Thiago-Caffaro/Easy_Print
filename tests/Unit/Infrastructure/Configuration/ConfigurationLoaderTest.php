@@ -22,6 +22,9 @@ final class ConfigurationLoaderTest extends TestCase
         self::assertSame('cups', $config->cupsHost);
         self::assertSame(631, $config->cupsPort);
         self::assertSame(26_214_400, $config->uploadMaxBytes);
+        self::assertSame(27_262_976, $config->requestBodyMaxBytes);
+        self::assertSame(16_384, $config->requestHeaderMaxBytes);
+        self::assertFalse($config->cookieSecure);
         self::assertSame(16_384, $config->imageMaxWidth);
         self::assertSame(16_384, $config->imageMaxHeight);
         self::assertSame(50_000_000, $config->imageMaxPixels);
@@ -50,6 +53,8 @@ final class ConfigurationLoaderTest extends TestCase
         yield 'port is outside the TCP range' => [['CUPS_PORT' => '70000'], 'CUPS_PORT'];
         yield 'host includes a scheme' => [['CUPS_HOST' => 'http://private.example'], 'CUPS_HOST'];
         yield 'upload limit is too small' => [['UPLOAD_MAX_BYTES' => '12'], 'UPLOAD_MAX_BYTES'];
+        yield 'request body is below upload limit' => [['REQUEST_BODY_MAX_BYTES' => '1048576'], 'REQUEST_BODY_MAX_BYTES'];
+        yield 'request headers are unbounded' => [['REQUEST_HEADER_MAX_BYTES' => '65537'], 'REQUEST_HEADER_MAX_BYTES'];
         yield 'image width is unbounded' => [['IMAGE_MAX_WIDTH' => '100001'], 'IMAGE_MAX_WIDTH'];
         yield 'image pixel limit is empty' => [['IMAGE_MAX_PIXELS' => '0'], 'IMAGE_MAX_PIXELS'];
         yield 'timeout is unbounded' => [['PROCESS_TIMEOUT_SECONDS' => '0'], 'PROCESS_TIMEOUT_SECONDS'];

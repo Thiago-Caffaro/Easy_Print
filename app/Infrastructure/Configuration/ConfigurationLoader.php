@@ -58,10 +58,18 @@ final class ConfigurationLoader
             throw new ConfigurationException('APP_LOCALE must be included in APP_ENABLED_LOCALES.');
         }
 
+        $uploadMaxBytes = self::integer('UPLOAD_MAX_BYTES', $read('UPLOAD_MAX_BYTES', '26214400'), 1_024, 104_857_600);
+        $requestBodyMaxBytes = self::integer('REQUEST_BODY_MAX_BYTES', $read('REQUEST_BODY_MAX_BYTES', '27262976'), 1_024, 115_343_360);
+
+        if ($requestBodyMaxBytes < $uploadMaxBytes) {
+            throw new ConfigurationException('REQUEST_BODY_MAX_BYTES must be greater than or equal to UPLOAD_MAX_BYTES.');
+        }
+
         return new AppConfig(
             environment: self::environment($read('APP_ENV', 'production')),
             debug: self::boolean('APP_DEBUG', $read('APP_DEBUG', 'false')),
             basePath: self::basePath($read('APP_BASE_PATH', '')),
+            cookieSecure: self::boolean('COOKIE_SECURE', $read('COOKIE_SECURE', 'false')),
             defaultLocale: $defaultLocale,
             enabledLocales: $enabledLocales,
             cupsHost: self::host($read('CUPS_HOST', 'cups')),
@@ -70,7 +78,9 @@ final class ConfigurationLoader
             cupsServerKey: self::serverKey($read('CUPS_SERVER_KEY', 'primary')),
             databasePath: self::absolutePath('DATABASE_PATH', $read('DATABASE_PATH', $root . '/storage/database/easy-print.sqlite')),
             temporaryPath: self::absolutePath('TEMPORARY_PATH', $read('TEMPORARY_PATH', $root . '/storage/temporary')),
-            uploadMaxBytes: self::integer('UPLOAD_MAX_BYTES', $read('UPLOAD_MAX_BYTES', '26214400'), 1_024, 104_857_600),
+            uploadMaxBytes: $uploadMaxBytes,
+            requestBodyMaxBytes: $requestBodyMaxBytes,
+            requestHeaderMaxBytes: self::integer('REQUEST_HEADER_MAX_BYTES', $read('REQUEST_HEADER_MAX_BYTES', '16384'), 1_024, 65_536),
             imageMaxWidth: self::integer('IMAGE_MAX_WIDTH', $read('IMAGE_MAX_WIDTH', '16384'), 1, 100_000),
             imageMaxHeight: self::integer('IMAGE_MAX_HEIGHT', $read('IMAGE_MAX_HEIGHT', '16384'), 1, 100_000),
             imageMaxPixels: self::integer('IMAGE_MAX_PIXELS', $read('IMAGE_MAX_PIXELS', '50000000'), 1, 250_000_000),

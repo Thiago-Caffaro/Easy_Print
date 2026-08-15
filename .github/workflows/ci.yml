@@ -132,6 +132,17 @@ jobs:
           test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$web_container")" = "true"
           test "$(docker inspect --format '{{.Config.User}}' "$web_container")" = "easyprint"
 
+      - name: Verify the HTTP security boundary
+        run: |
+          headers="$RUNNER_TEMP/easy-print-headers.txt"
+          oversized="$RUNNER_TEMP/easy-print-oversized.bin"
+          curl --fail --silent --show-error --dump-header "$headers" --output /dev/null http://127.0.0.1:8080/
+          grep --fixed-strings --quiet "Content-Security-Policy:" "$headers"
+          grep --fixed-strings --quiet "X-Content-Type-Options: nosniff" "$headers"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST http://127.0.0.1:8080/)" = "403"
+          truncate --size 27262977 "$oversized"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST --data-binary "@$oversized" http://127.0.0.1:8080/)" = "413"
+
       - name: Smoke test queue discovery from the web image
         run: docker compose exec --no-TTY web php /app/bin/check-cups.php
 
