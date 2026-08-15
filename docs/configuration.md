@@ -35,3 +35,16 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 The base path is also used in the queue-selection cookie. Its restricted character set prevents response-header injection as well as path traversal.
 
 The process executable variables are deployment configuration, not browser input. CUPS adapters refer to the logical allowlist keys and never accept an executable or option name from an HTTP request.
+
+## Compose build metadata
+
+The following Compose inputs affect image naming or OCI labels and are not application runtime settings:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `EASY_PRINT_IMAGE_TAG` | `local` | Local tag applied to the built web image |
+| `EASY_PRINT_VERSION` | `dev` | Version recorded in the OCI image label |
+| `EASY_PRINT_REVISION` | `unknown` | Source revision recorded in the OCI image label |
+| `EASY_PRINT_CREATED` | Unix epoch | RFC 3339 creation value recorded in the OCI image label |
+
+Release automation supplies reviewed values. Normal local deployments can keep the defaults.

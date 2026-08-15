@@ -2,9 +2,14 @@ name: easy-print
 
 services:
   web:
+    image: easy-print-web:${EASY_PRINT_IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/web/Dockerfile
+      args:
+        EASY_PRINT_CREATED: ${EASY_PRINT_CREATED:-1970-01-01T00:00:00Z}
+        EASY_PRINT_REVISION: ${EASY_PRINT_REVISION:-unknown}
+        EASY_PRINT_VERSION: ${EASY_PRINT_VERSION:-dev}
     depends_on:
       cups:
         condition: service_healthy

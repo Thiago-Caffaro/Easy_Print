@@ -20,10 +20,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: "8.5"
           coverage: none
@@ -37,7 +37,7 @@ jobs:
         run: echo "directory=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer downloads
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
@@ -70,10 +70,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
 
@@ -84,9 +84,15 @@ jobs:
     name: Containers
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      EASY_PRINT_CREATED: "1970-01-01T00:00:00Z"
+      EASY_PRINT_IMAGE_TAG: ci-${{ github.sha }}
+      EASY_PRINT_REVISION: ${{ github.sha }}
+      EASY_PRINT_VERSION: 0.0.0-ci
+      EASY_PRINT_WEB_IMAGE: easy-print-web:ci-${{ github.sha }}
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Validate Compose model
         run: docker compose config --quiet
@@ -94,11 +100,40 @@ jobs:
       - name: Build reference images
         run: docker compose build --pull web cups
 
-      - name: Start the empty CUPS reference service
-        run: docker compose up --detach --wait cups
+      - name: Inspect the final web image
+        run: |
+          test "$(docker image inspect --format '{{.Config.User}}' "$EASY_PRINT_WEB_IMAGE")" = "easyprint"
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.source"}}' "$EASY_PRINT_WEB_IMAGE")" = "https://github.com/Thiago-Caffaro/Easy_Print"
+          docker run --rm --read-only --tmpfs /tmp --entrypoint sh "$EASY_PRINT_WEB_IMAGE" -c 'test "$(id -u)" = "10001" && ! command -v composer && ! command -v gcc'
+          docker run --rm --read-only --tmpfs /tmp --entrypoint php "$EASY_PRINT_WEB_IMAGE" -r 'foreach (["fileinfo", "gd", "intl", "pdo_sqlite"] as $extension) { if (!extension_loaded($extension)) { exit(1); } }'
+
+      - name: Install pinned Trivy
+        env:
+          TRIVY_SHA256: bbb64b9695866ce4a7a8f5c9592002c5961cab378577fa3f8a040df362b9b2ea
+          TRIVY_VERSION: 0.72.0
+        run: |
+          archive="$RUNNER_TEMP/trivy.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  ${archive}" | sha256sum --check --status
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" trivy
+          sudo install --mode 0755 "$RUNNER_TEMP/trivy" /usr/local/bin/trivy
+
+      - name: Scan the web image for fixable high-severity vulnerabilities
+        run: trivy image --exit-code 1 --ignore-unfixed --no-progress --pkg-types os,library --severity HIGH,CRITICAL "$EASY_PRINT_WEB_IMAGE"
+
+      - name: Start the read-only reference stack
+        run: docker compose up --detach --wait cups web
+
+      - name: Verify the running web container boundary
+        run: |
+          web_container="$(docker compose ps --quiet web)"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$web_container")" = "true"
+          test "$(docker inspect --format '{{.Config.User}}' "$web_container")" = "easyprint"
 
       - name: Smoke test queue discovery from the web image
-        run: docker compose run --rm --no-deps web php /app/bin/check-cups.php
+        run: docker compose exec --no-TTY web php /app/bin/check-cups.php
 
       - name: Clean up reference services
         if: always()
