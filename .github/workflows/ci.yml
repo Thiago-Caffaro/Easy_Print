@@ -139,9 +139,11 @@ jobs:
           curl --fail --silent --show-error --dump-header "$headers" --output /dev/null http://127.0.0.1:8080/
           grep --fixed-strings --quiet "Content-Security-Policy:" "$headers"
           grep --fixed-strings --quiet "X-Content-Type-Options: nosniff" "$headers"
+          grep --extended-regexp --ignore-case --quiet '^X-Request-ID: [a-f0-9]{32}' "$headers"
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST http://127.0.0.1:8080/)" = "403"
           truncate --size 27262977 "$oversized"
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST --data-binary "@$oversized" http://127.0.0.1:8080/)" = "413"
+          test "$(curl --fail --silent --show-error http://127.0.0.1:8080/health/ready)" = '{"status":"ok","checks":{"application":"ok","storage":"ok","database":"ok","cups":"available"}}'
 
       - name: Smoke test queue discovery from the web image
         run: docker compose exec --no-TTY web php /app/bin/check-cups.php

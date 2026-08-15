@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace EasyPrint\Infrastructure\Cups;
 
+use function count;
+
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Domain\Printer\CupsConnectivity;
 use EasyPrint\Domain\Printer\PrinterQueue;
@@ -12,6 +14,9 @@ use EasyPrint\Domain\Printer\QueueSnapshot;
 use EasyPrint\Infrastructure\Process\ProcessFailureReason;
 use EasyPrint\Infrastructure\Process\ProcessResult;
 use EasyPrint\Infrastructure\Process\ProcessRunner;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 
 use function str_contains;
 use function strtolower;
@@ -24,9 +29,25 @@ final readonly class LpstatQueueDiscovery implements QueueDiscovery
         private string $host,
         private int $port,
         private bool $requireEncryption,
+        private LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function discover(): QueueSnapshot
+    {
+        $snapshot = $this->discoverSnapshot();
+        $this->logger->log(
+            CupsConnectivity::Available === $snapshot->connectivity ? LogLevel::INFO : LogLevel::WARNING,
+            'cups.queue_discovery.completed',
+            [
+                'connectivity' => $snapshot->connectivity->value,
+                'queue_count' => count($snapshot->queues),
+            ],
+        );
+
+        return $snapshot;
+    }
+
+    private function discoverSnapshot(): QueueSnapshot
     {
         $scheduler = $this->run(['-r']);
 

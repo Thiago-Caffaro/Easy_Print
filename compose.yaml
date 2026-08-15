@@ -18,6 +18,7 @@ services:
       APP_DEBUG: "false"
       APP_BASE_PATH: ${APP_BASE_PATH:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       APP_LOCALE: ${APP_LOCALE:-pt-BR}
       APP_ENABLED_LOCALES: ${APP_ENABLED_LOCALES:-pt-BR,en}
       CUPS_HOST: cups
