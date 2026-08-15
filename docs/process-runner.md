@@ -13,4 +13,4 @@ All CUPS client utilities execute through `AllowedProcessRunner`. The boundary a
 
 The runner uses Symfony Process because its cross-platform process supervision reliably enforces timeouts on Windows and Linux. This dependency is contained inside the infrastructure boundary; application and domain code do not import it.
 
-The runner does not make CUPS options safe by itself. Queue names, job identifiers, option keys, option values, page ranges, and file paths must still be validated by the future CUPS adapter before they become arguments.
+The runner does not make CUPS options safe by itself. Queue names, option keys/values, copies, and page ranges pass through the separate [print argument validation](print-argument-validation.md) boundary. Job identifiers and private file paths still require their dedicated adapters before they become arguments.
