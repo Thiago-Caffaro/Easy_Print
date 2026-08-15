@@ -1,4 +1,13 @@
-FROM composer:2.10.2 AS dependencies
+FROM php:8.5.9-cli-alpine AS php-base
+
+RUN apk add --no-cache cups-client icu-libs sqlite-libs \
+    && apk add --no-cache --virtual .build-dependencies icu-dev sqlite-dev \
+    && docker-php-ext-install intl pdo_sqlite \
+    && apk del .build-dependencies
+
+FROM php-base AS dependencies
+
+COPY --from=composer:2.10.2 /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /app
 COPY composer.json composer.lock ./
@@ -10,13 +19,9 @@ RUN composer install \
     --no-scripts \
     --prefer-dist
 
-FROM php:8.5.9-cli-alpine AS runtime
+FROM php-base AS runtime
 
-RUN apk add --no-cache cups-client icu-libs sqlite-libs \
-    && apk add --no-cache --virtual .build-dependencies icu-dev sqlite-dev \
-    && docker-php-ext-install intl pdo_sqlite \
-    && apk del .build-dependencies \
-    && addgroup -S -g 10001 easyprint \
+RUN addgroup -S -g 10001 easyprint \
     && adduser -S -D -H -u 10001 -G easyprint easyprint
 
 WORKDIR /app
