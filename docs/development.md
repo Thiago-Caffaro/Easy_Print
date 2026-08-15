@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- PHP 8.5 with `intl`, `json`, `pdo`, and `pdo_sqlite`.
+- PHP 8.5 with `fileinfo`, `gd`, `intl`, `json`, `pdo`, and `pdo_sqlite`.
 - Composer 2.10 or newer.
 - Node.js 24 for the pinned Markdown lint command.
 - Docker Engine with the Compose plugin for the Linux reference package.

@@ -4,43 +4,24 @@ declare(strict_types=1);
 
 namespace EasyPrint\Infrastructure\Upload;
 
-use function bin2hex;
-
-use const DIRECTORY_SEPARATOR;
-
 use EasyPrint\Application\Document\PdfUploadFailure;
 use EasyPrint\Application\Document\PdfUploadResult;
 use EasyPrint\Domain\Document\StoredPdf;
 
-use function file_exists;
-
 use const FILEINFO_MIME_TYPE;
-
-use function filesize;
 
 use finfo;
 
-use function is_int;
 use function is_string;
-use function is_writable;
 use function pathinfo;
 
 use const PATHINFO_EXTENSION;
 
-use function preg_match;
-
 use Psr\Http\Message\UploadedFileInterface;
 
-use function random_bytes;
-use function realpath;
-use function rtrim;
-use function str_contains;
-use function str_replace;
 use function strtolower;
 
 use Throwable;
-
-use function unlink;
 
 use const UPLOAD_ERR_FORM_SIZE;
 use const UPLOAD_ERR_INI_SIZE;
@@ -51,12 +32,16 @@ final readonly class SecurePdfUpload
 {
     private const MEDIA_TYPE = 'application/pdf';
 
+    private PrivateUploadStorage $storage;
+
     public function __construct(
-        private string $storageDirectory,
-        private string $publicDirectory,
+        string $storageDirectory,
+        string $publicDirectory,
         private int $maximumBytes,
         private PdfStructureInspector $structureInspector,
-    ) {}
+    ) {
+        $this->storage = new PrivateUploadStorage($storageDirectory, $publicDirectory);
+    }
 
     public function store(UploadedFileInterface $upload): PdfUploadResult
     {
@@ -76,7 +61,7 @@ final readonly class SecurePdfUpload
 
         $originalName = $upload->getClientFilename();
 
-        if (!is_string($originalName) || !$this->validOriginalName($originalName)) {
+        if (!is_string($originalName) || !UploadNameValidator::isValid($originalName)) {
             return PdfUploadResult::rejected(PdfUploadFailure::InvalidName);
         }
 
@@ -90,94 +75,37 @@ final readonly class SecurePdfUpload
             return PdfUploadResult::rejected(PdfUploadFailure::TooLarge);
         }
 
-        $storageRoot = $this->safeStorageRoot();
+        $stored = $this->storage->move($upload, 'pdf');
 
-        if (null === $storageRoot) {
+        if (null === $stored) {
             return PdfUploadResult::rejected(PdfUploadFailure::StorageUnavailable);
         }
 
-        $storedName = bin2hex(random_bytes(16)) . '.pdf';
-        $target = $storageRoot . DIRECTORY_SEPARATOR . $storedName;
-
-        if (file_exists($target)) {
-            return PdfUploadResult::rejected(PdfUploadFailure::StorageUnavailable);
-        }
-
-        try {
-            $upload->moveTo($target);
-        } catch (Throwable) {
-            return PdfUploadResult::rejected(PdfUploadFailure::StorageUnavailable);
-        }
-
-        $failure = $this->validateStoredFile($target, $storageRoot);
+        $failure = $this->validateStoredFile($stored);
 
         if (null !== $failure) {
-            @unlink($target);
+            $this->storage->delete($stored);
 
             return PdfUploadResult::rejected($failure);
         }
 
-        $byteSize = filesize($target);
-
-        if (!is_int($byteSize)) {
-            @unlink($target);
-
-            return PdfUploadResult::rejected(PdfUploadFailure::StorageUnavailable);
-        }
-
         return PdfUploadResult::accepted(new StoredPdf(
-            storedName: $storedName,
-            absolutePath: $target,
+            storedName: $stored->storedName,
+            absolutePath: $stored->absolutePath,
             originalName: $originalName,
-            byteSize: $byteSize,
+            byteSize: $stored->byteSize,
             mediaType: self::MEDIA_TYPE,
         ));
     }
 
-    private function validOriginalName(string $name): bool
+    private function validateStoredFile(PrivateStoredUpload $stored): ?PdfUploadFailure
     {
-        return '' !== $name
-            && strlen($name) <= 255
-            && !str_contains($name, '/')
-            && !str_contains($name, '\\')
-            && 1 !== preg_match('/[\x00-\x1F\x7F]/', $name);
-    }
-
-    private function safeStorageRoot(): ?string
-    {
-        $storageRoot = realpath($this->storageDirectory);
-        $publicRoot = realpath($this->publicDirectory);
-
-        if (false === $storageRoot || false === $publicRoot || !is_writable($storageRoot)) {
-            return null;
-        }
-
-        $storage = $this->normalizedPath($storageRoot);
-        $public = $this->normalizedPath($publicRoot);
-
-        if ($storage === $public || str_starts_with($storage . '/', $public . '/')) {
-            return null;
-        }
-
-        return $storageRoot;
-    }
-
-    private function validateStoredFile(string $target, string $storageRoot): ?PdfUploadFailure
-    {
-        $resolvedTarget = realpath($target);
-
-        if (false === $resolvedTarget || !$this->isWithin($storageRoot, $resolvedTarget)) {
-            return PdfUploadFailure::StorageUnavailable;
-        }
-
-        $byteSize = filesize($resolvedTarget);
-
-        if (!is_int($byteSize) || $byteSize < 1 || $byteSize > $this->maximumBytes) {
+        if ($stored->byteSize < 1 || $stored->byteSize > $this->maximumBytes) {
             return PdfUploadFailure::TooLarge;
         }
 
         try {
-            $mediaType = new finfo(FILEINFO_MIME_TYPE)->file($resolvedTarget);
+            $mediaType = new finfo(FILEINFO_MIME_TYPE)->file($stored->absolutePath);
         } catch (Throwable) {
             return PdfUploadFailure::StorageUnavailable;
         }
@@ -186,25 +114,10 @@ final readonly class SecurePdfUpload
             return PdfUploadFailure::MimeMismatch;
         }
 
-        if (!$this->structureInspector->isValid($resolvedTarget, $byteSize)) {
+        if (!$this->structureInspector->isValid($stored->absolutePath, $stored->byteSize)) {
             return PdfUploadFailure::InvalidPdf;
         }
 
         return null;
-    }
-
-    private function isWithin(string $root, string $path): bool
-    {
-        $root = $this->normalizedPath($root);
-        $path = $this->normalizedPath($path);
-
-        return str_starts_with($path, $root . '/');
-    }
-
-    private function normalizedPath(string $path): string
-    {
-        $normalized = str_replace('\\', '/', $path);
-
-        return rtrim(PHP_OS_FAMILY === 'Windows' ? strtolower($normalized) : $normalized, '/');
     }
 }

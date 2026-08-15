@@ -27,7 +27,7 @@ jobs:
         with:
           php-version: "8.5"
           coverage: none
-          extensions: fileinfo, intl, pdo_sqlite
+          extensions: fileinfo, gd, intl, pdo_sqlite
           tools: composer:2.10.2@sha256:5ee7125f8a30a34d246cefdc0bc85b8a783b28f2aec968994118512350d28027
         env:
           fail-fast: true
