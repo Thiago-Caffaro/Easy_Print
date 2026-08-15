@@ -1,0 +1,19 @@
+{
+  "fixtureKind": "synthetic-contract",
+  "commands": {
+    "scheduler": {
+      "stdout": "scheduler is running\n"
+    },
+    "default": {
+      "stdout": "system default destination: REFERENCE_QUEUE\n"
+    },
+    "queues": {
+      "stdout": "REFERENCE_QUEUE\nWAREHOUSE_LABELS\n"
+    }
+  },
+  "expected": {
+    "connectivity": "available",
+    "defaultQueueIdentifier": "REFERENCE_QUEUE",
+    "queueIdentifiers": ["REFERENCE_QUEUE", "WAREHOUSE_LABELS"]
+  }
+}

@@ -44,6 +44,14 @@ Focused commands are available as Composer scripts:
 
 Normal tests never contact CUPS or a physical printer. Real printer checks require explicit authorization and recorded environment details.
 
+The opt-in, read-only queue discovery smoke check is:
+
+```bash
+php bin/check-cups.php
+```
+
+It uses the configured CUPS host and exits non-zero for unavailable, unauthorized, timed-out, or malformed responses. See [CUPS queue discovery](cups-discovery.md) for its result contract and Docker invocation.
+
 ## Composition root
 
 `config/bootstrap.php` creates the Slim application explicitly. There is no dependency container or service locator. Add a dependency only when a working vertical slice uses it and pass it through a constructor.

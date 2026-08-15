@@ -93,3 +93,13 @@ jobs:
 
       - name: Build reference images
         run: docker compose build --pull web cups
+
+      - name: Start the empty CUPS reference service
+        run: docker compose up --detach --wait cups
+
+      - name: Smoke test queue discovery from the web image
+        run: docker compose run --rm --no-deps web php /app/bin/check-cups.php
+
+      - name: Clean up reference services
+        if: always()
+        run: docker compose down --volumes --remove-orphans

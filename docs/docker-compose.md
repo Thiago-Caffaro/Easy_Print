@@ -25,6 +25,7 @@ Set `WEB_BIND_ADDRESS` or `CUPS_BIND_ADDRESS` in `.env` only when access is prot
 - Has a persistent application-data volume and a private tmpfs for uploaded documents.
 - Runs as UID/GID 10001 with a read-only root filesystem, no Linux capabilities, and no USB devices.
 - Applies SQLite migrations before starting the HTTP process.
+- Accepts an explicit container command after migrations, which CI uses for the read-only CUPS discovery smoke check.
 
 ### CUPS and Avahi
 

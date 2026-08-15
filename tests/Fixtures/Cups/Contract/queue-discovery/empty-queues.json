@@ -1,0 +1,19 @@
+{
+  "fixtureKind": "synthetic-contract",
+  "commands": {
+    "scheduler": {
+      "stdout": "scheduler is running\n"
+    },
+    "default": {
+      "stdout": "no system default destination\n"
+    },
+    "queues": {
+      "stdout": ""
+    }
+  },
+  "expected": {
+    "connectivity": "available",
+    "defaultQueueIdentifier": null,
+    "queueIdentifiers": []
+  }
+}

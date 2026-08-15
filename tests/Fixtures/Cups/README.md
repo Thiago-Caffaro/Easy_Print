@@ -4,13 +4,15 @@ Fixtures make CUPS parsing deterministic without contacting a printer during nor
 
 ## Current state
 
-The fixture contract and capture procedure are versioned here. No Epson L4150 output has been committed yet because the current development machine does not have working CUPS client tools. Issue #3 remains open until output is captured from the real server, sanitized, reviewed, paired with expected normalized JSON, and exercised by parser contract tests.
+The captured-fixture contract and capture procedure are versioned here. No Epson L4150 command output has been committed yet because the current development machine does not have working CUPS client tools. Issue #3 remains open until output is captured from the real server, sanitized, reviewed, paired with expected normalized JSON, and exercised by parser contract tests.
 
 Do not replace missing evidence with invented output.
 
+Synthetic fixtures under `Contract/` exercise protocol-shape edge cases and are labeled `synthetic-contract` inside each file. They are test inputs, not evidence about a physical printer, driver, or CUPS version. Captured evidence and synthetic examples must remain visibly separate.
+
 ## Layout
 
-Each scenario will contain:
+Each captured scenario will contain:
 
 ```text
 <scenario>/

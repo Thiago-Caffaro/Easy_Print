@@ -63,7 +63,7 @@ The product is intentionally small:
 
 ## Development snapshot
 
-The Foundation branch provides the first executable Slim application, validated environment configuration, Portuguese and English catalogs, a transactional SQLite migration mechanism, a bounded allowlisted process runner, and the separate web/CUPS Docker Compose topology.
+The current development branches provide the first executable Slim application, validated environment configuration, Portuguese and English catalogs, a transactional SQLite migration mechanism, a bounded allowlisted process runner, the separate web/CUPS Docker Compose topology, and read-only CUPS queue discovery.
 
 ```bash
 cp .env.example .env
@@ -72,7 +72,7 @@ docker compose up --build
 
 The web interface binds to `127.0.0.1:8080` and CUPS binds to `127.0.0.1:631` by default. Change bind addresses only when the host firewall, LAN, Tailscale, or reverse proxy is intentionally providing the access boundary.
 
-For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), while migrations and retention fields are covered in [Database](docs/database.md).
+For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), migrations and retention fields are covered in [Database](docs/database.md), and the structured discovery contract is described in [CUPS queue discovery](docs/cups-discovery.md).
 
 ## Architecture
 
