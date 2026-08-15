@@ -46,8 +46,10 @@ final class JsonLineLogger extends AbstractLogger
         'duration_ms',
         'exception',
         'method',
+        'option_count',
         'queue_count',
         'status',
+        'unknown_option_count',
     ];
     private const PRIORITIES = [
         LogLevel::DEBUG => 100,
@@ -184,7 +186,8 @@ final class JsonLineLogger extends AbstractLogger
                 'duration_ms' => is_int($value) && $value >= 0 && $value <= 86_400_000
                     ? $value
                     : '[redacted]',
-                'queue_count' => is_int($value) && $value >= 0 && $value <= 10_000
+                'option_count', 'queue_count', 'unknown_option_count' => is_int($value)
+                    && $value >= 0 && $value <= 10_000
                     ? $value
                     : '[redacted]',
             };

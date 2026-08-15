@@ -52,7 +52,7 @@ final readonly class LpstatQueueDiscovery implements QueueDiscovery
         $scheduler = $this->run(['-r']);
 
         if (!$scheduler->succeeded()) {
-            return QueueSnapshot::failed($this->connectivityForFailure($scheduler));
+            return QueueSnapshot::failed(CupsFailureClassifier::classify($scheduler));
         }
 
         try {
@@ -63,13 +63,13 @@ final readonly class LpstatQueueDiscovery implements QueueDiscovery
             $default = $this->run(['-d']);
 
             if (!$default->succeeded()) {
-                return QueueSnapshot::failed($this->connectivityForFailure($default));
+                return QueueSnapshot::failed(CupsFailureClassifier::classify($default));
             }
 
             $queues = $this->run(['-e']);
 
             if (!$queues->succeeded()) {
-                return QueueSnapshot::failed($this->connectivityForFailure($queues));
+                return QueueSnapshot::failed(CupsFailureClassifier::classify($queues));
             }
 
             $identifiers = $this->parser->queueIdentifiers($queues->stdout);
@@ -133,24 +133,4 @@ final readonly class LpstatQueueDiscovery implements QueueDiscovery
         return $host . ':' . $this->port;
     }
 
-    private function connectivityForFailure(ProcessResult $result): CupsConnectivity
-    {
-        if (ProcessFailureReason::TimedOut === $result->failureReason) {
-            return CupsConnectivity::TimedOut;
-        }
-
-        if (ProcessFailureReason::OutputLimit === $result->failureReason) {
-            return CupsConnectivity::MalformedResponse;
-        }
-
-        $diagnostic = strtolower($result->stderr . "\n" . $result->stdout);
-
-        foreach (['not authorized', 'unauthorized', 'forbidden', 'client-error-not-authorized'] as $marker) {
-            if (str_contains($diagnostic, $marker)) {
-                return CupsConnectivity::Unauthorized;
-            }
-        }
-
-        return CupsConnectivity::Unavailable;
-    }
 }

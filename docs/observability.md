@@ -40,7 +40,8 @@ Current stable events include:
 - `http.request.rejected` for framework HTTP exceptions;
 - `http.request.failed` for unexpected action/middleware failures;
 - `http.middleware.failed` for failures outside the framework error boundary;
-- `cups.queue_discovery.completed` with connectivity and queue count; and
+- `cups.queue_discovery.completed` with connectivity and queue count;
+- `cups.capability_discovery.completed` with connectivity and safe known/unknown option counts; and
 - `health.<component>.unavailable` for readiness failures.
 
 Dependency adapters receive the same logger, so records produced during a request inherit its correlation ID without placing HTTP concepts in their interfaces. The dependency-free liveness request is logged at `debug` and therefore does not create an application record at the default `info` level.
