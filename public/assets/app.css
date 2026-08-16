@@ -186,3 +186,94 @@ dd {
     outline: 0.2rem solid #90cdf4;
     outline-offset: 0.2rem;
 }
+
+.active-jobs {
+    margin-top: 2rem;
+}
+
+.section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.section-heading h2 {
+    margin: 0.2rem 0 0;
+    font-size: 1.15rem;
+}
+
+.section-heading a,
+.active-jobs a {
+    color: #225ea8;
+    font-weight: 700;
+    text-underline-offset: 0.2em;
+}
+
+.section-status {
+    margin: 0;
+    color: #68768b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.error-state {
+    border-color: #f6ad55;
+    background: #fffaf0;
+    color: #7b341e;
+}
+
+.job-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.job-card {
+    padding: 1rem;
+    border: 1px solid #dbe3ef;
+    border-radius: 1rem;
+    background: #fff;
+}
+
+.job-card h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 1rem;
+}
+
+.job-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0 0;
+}
+
+.job-details div {
+    min-width: 0;
+}
+
+.job-details dd {
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 35rem) {
+    .shell {
+        padding: 1rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+    }
+
+    .section-heading {
+        align-items: start;
+        flex-direction: column;
+    }
+}

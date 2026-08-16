@@ -22,6 +22,11 @@ declare(strict_types=1);
  * @var string                  $languageLabel
  * @var string                  $portugueseLabel
  * @var string                  $englishLabel
+ * @var string                  $stylesheetUrl
+ * @var string                  $htmxAssetUrl
+ * @var string                  $activeJobsUrl
+ * @var string                  $activeJobsHeading
+ * @var string                  $activeJobsLoading
  */
 ?>
 <!doctype html>
@@ -30,7 +35,8 @@ declare(strict_types=1);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $escape($pageTitle) ?></title>
-    <link rel="stylesheet" href="assets/app.css">
+    <link rel="stylesheet" href="<?= $escape($stylesheetUrl) ?>">
+    <script src="<?= $escape($htmxAssetUrl) ?>" defer></script>
 </head>
 <body>
     <main class="shell">
@@ -85,6 +91,21 @@ declare(strict_types=1);
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+            </section>
+
+            <section
+                id="active-jobs"
+                class="active-jobs"
+                aria-labelledby="active-jobs-heading"
+                aria-live="polite"
+                hx-get="<?= $escape($activeJobsUrl) ?>"
+                hx-trigger="load"
+                hx-swap="outerHTML"
+            >
+                <h2 id="active-jobs-heading"><?= $escape($activeJobsHeading) ?></h2>
+                <p class="empty-state">
+                    <a href="<?= $escape($activeJobsUrl) ?>"><?= $escape($activeJobsLoading) ?></a>
+                </p>
             </section>
 
             <nav aria-label="<?= $escape($languageLabel) ?>" class="languages">

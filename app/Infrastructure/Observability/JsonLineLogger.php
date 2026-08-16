@@ -45,6 +45,7 @@ final class JsonLineLogger extends AbstractLogger
         'connectivity',
         'duration_ms',
         'exception',
+        'job_count',
         'method',
         'option_count',
         'queue_count',
@@ -186,7 +187,7 @@ final class JsonLineLogger extends AbstractLogger
                 'duration_ms' => is_int($value) && $value >= 0 && $value <= 86_400_000
                     ? $value
                     : '[redacted]',
-                'option_count', 'queue_count', 'unknown_option_count' => is_int($value)
+                'job_count', 'option_count', 'queue_count', 'unknown_option_count' => is_int($value)
                     && $value >= 0 && $value <= 10_000
                     ? $value
                     : '[redacted]',

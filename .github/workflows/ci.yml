@@ -76,6 +76,13 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
+          cache: npm
+
+      - name: Install frontend asset dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Verify vendored frontend assets
+        run: npm run assets:verify
 
       - name: Lint Markdown
         run: npx --yes markdownlint-cli2@0.23.2

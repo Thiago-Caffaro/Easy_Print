@@ -1,0 +1,11 @@
+{
+  "name": "easy-print-assets",
+  "private": true,
+  "scripts": {
+    "assets:sync": "node scripts/sync-frontend-assets.mjs",
+    "assets:verify": "node scripts/sync-frontend-assets.mjs --check"
+  },
+  "dependencies": {
+    "htmx.org": "2.0.10"
+  }
+}

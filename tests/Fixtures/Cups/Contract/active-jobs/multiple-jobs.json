@@ -1,0 +1,19 @@
+{
+  "kind": "synthetic-contract",
+  "jobsStdout": "REFERENCE_QUEUE-42      print-user        2048   Wed 13 Aug 2026 10:30:00 AM UTC\nOFFICE_COLOR-7          external-user     1024   Wed 13 Aug 2026 10:31:00 AM UTC\n",
+  "printersStdout": "printer REFERENCE_QUEUE now printing REFERENCE_QUEUE-42.  enabled since Wed 13 Aug 2026 10:29:00 AM UTC\nprinter OFFICE_COLOR is idle.  enabled since Wed 13 Aug 2026 10:00:00 AM UTC\n",
+  "expected": [
+    {
+      "queueIdentifier": "REFERENCE_QUEUE",
+      "cupsJobId": 42,
+      "byteSize": 2048,
+      "state": "processing"
+    },
+    {
+      "queueIdentifier": "OFFICE_COLOR",
+      "cupsJobId": 7,
+      "byteSize": 1024,
+      "state": "pending"
+    }
+  ]
+}

@@ -21,6 +21,7 @@
   },
   "globs": [
     "**/*.md",
-    "!vendor/**"
+    "!vendor/**",
+    "!node_modules/**"
   ]
 }

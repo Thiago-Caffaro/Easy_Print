@@ -16,6 +16,7 @@ use EasyPrint\Infrastructure\Cups\LpPrintJobSubmitter;
 use EasyPrint\Infrastructure\Cups\LpSubmissionOutputParser;
 use EasyPrint\Infrastructure\Persistence\Migrator;
 use EasyPrint\Infrastructure\Persistence\SqliteConnectionFactory;
+use EasyPrint\Infrastructure\Persistence\SqliteJobTitleLookup;
 use EasyPrint\Infrastructure\Persistence\SqlitePrintJobRepository;
 use EasyPrint\Infrastructure\Process\ProcessFailureReason;
 use EasyPrint\Infrastructure\Process\ProcessResult;
@@ -94,6 +95,9 @@ final class PrintSubmissionServiceTest extends TestCase
         self::assertSame(456, $row['cups_job_id']);
         self::assertArrayNotHasKey('document_path', $row);
         self::assertSame(3, (int) $this->query('SELECT COUNT(*) FROM job_events')->fetchColumn());
+        $titles = new SqliteJobTitleLookup($this->databasePath);
+        self::assertSame('original.pdf', $titles->findOriginalName('primary', 'REFERENCE_QUEUE', 456));
+        self::assertNull($titles->findOriginalName('primary', 'EXTERNAL_QUEUE', 456));
     }
 
     public function testARepeatedSubmissionKeyReturnsTheExistingRecordWithoutCallingLpAgain(): void

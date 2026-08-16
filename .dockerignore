@@ -8,3 +8,4 @@ storage/database/*
 storage/logs/*
 storage/temporary/*
 vendor
+node_modules

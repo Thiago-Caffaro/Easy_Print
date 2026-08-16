@@ -46,6 +46,14 @@ Focused commands are available as Composer scripts:
 
 Normal tests never contact CUPS or a physical printer. Real printer checks require explicit authorization and recorded environment details.
 
+HTMX is pinned in `package-lock.json` and copied into the public asset directory so private deployments do not depend on a CDN. After changing the locked version, regenerate and verify the committed files:
+
+```bash
+npm ci --ignore-scripts
+npm run assets:sync
+npm run assets:verify
+```
+
 The opt-in, read-only queue discovery smoke check is:
 
 ```bash
