@@ -39,6 +39,7 @@ final class JsonLineLoggerTest extends TestCase
             'connectivity' => 'available',
             'option_count' => 8,
             'queue_count' => 2,
+            'reason_count' => 2,
             'job_count' => 3,
             'unknown_option_count' => 1,
             'document_title' => 'private.pdf',
@@ -59,6 +60,7 @@ final class JsonLineLoggerTest extends TestCase
         self::assertSame('available', $record['context']['connectivity']);
         self::assertSame(8, $record['context']['option_count']);
         self::assertSame(2, $record['context']['queue_count']);
+        self::assertSame(2, $record['context']['reason_count']);
         self::assertSame(3, $record['context']['job_count']);
         self::assertSame(1, $record['context']['unknown_option_count']);
         self::assertSame('[redacted]', $record['context']['document_title']);

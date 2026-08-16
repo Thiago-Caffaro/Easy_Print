@@ -92,6 +92,65 @@ dd {
     margin-top: 2rem;
 }
 
+.primary-navigation {
+    margin-top: 2rem;
+}
+
+.primary-navigation a,
+.back-link,
+.pagination a {
+    color: #225ea8;
+    font-weight: 700;
+    text-underline-offset: 0.2em;
+}
+
+.card-wide {
+    width: min(100%, 64rem);
+}
+
+.history-list {
+    display: grid;
+    gap: 1rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.history-card {
+    padding: 1.25rem;
+    border: 1px solid #dbe3ef;
+    border-radius: 1rem;
+}
+
+.history-card-heading {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.history-card-heading h2 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.1rem;
+}
+
+.history-error {
+    margin: 1rem 0 0;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: #fffaf0;
+    color: #7b341e;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
 .queues {
     margin-top: 2rem;
 }
@@ -189,6 +248,28 @@ dd {
 
 .active-jobs {
     margin-top: 2rem;
+}
+
+.printer-status {
+    margin-top: 2rem;
+}
+
+.printer-status h2 {
+    margin: 0 0 1rem;
+    font-size: 1.15rem;
+}
+
+.printer-status h3 {
+    margin: 1rem 0 0.75rem;
+    font-size: 1rem;
+}
+
+.reason-list {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #7b341e;
 }
 
 .section-heading {

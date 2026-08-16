@@ -80,6 +80,8 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('/assets/htmx.min.js', $body);
         self::assertStringContainsString('hx-trigger="load"', $body);
         self::assertStringContainsString('/jobs/active?lang=pt-BR', $body);
+        self::assertStringContainsString('/history?lang=pt-BR', $body);
+        self::assertStringContainsString('/printer/status?lang=pt-BR&amp;queue=REFERENCE_QUEUE', $body);
         self::assertStringContainsString('Pronta', $body);
         self::assertStringContainsString('easy_print_queue=REFERENCE_QUEUE', $response->getHeaderLine('Set-Cookie'));
         self::assertStringContainsString('easy_print_session=', $response->getHeaderLine('Set-Cookie'));
