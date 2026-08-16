@@ -21,6 +21,19 @@ RUN composer install \
 
 FROM php-base AS runtime
 
+ARG EASY_PRINT_CREATED=1970-01-01T00:00:00Z
+ARG EASY_PRINT_REVISION=unknown
+ARG EASY_PRINT_VERSION=dev
+
+LABEL org.opencontainers.image.created="${EASY_PRINT_CREATED}" \
+    org.opencontainers.image.description="Printer-agnostic, self-hosted web interface for CUPS" \
+    org.opencontainers.image.documentation="https://github.com/Thiago-Caffaro/Easy_Print/wiki" \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.revision="${EASY_PRINT_REVISION}" \
+    org.opencontainers.image.source="https://github.com/Thiago-Caffaro/Easy_Print" \
+    org.opencontainers.image.title="Easy Print" \
+    org.opencontainers.image.version="${EASY_PRINT_VERSION}"
+
 RUN addgroup -S -g 10001 easyprint \
     && adduser -S -D -H -u 10001 -G easyprint easyprint
 
@@ -45,6 +58,7 @@ ENV APP_ENV=production \
 
 USER easyprint
 EXPOSE 8080
+STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
     CMD php -r "exit(false === @file_get_contents('http://127.0.0.1:8080/') ? 1 : 0);"
