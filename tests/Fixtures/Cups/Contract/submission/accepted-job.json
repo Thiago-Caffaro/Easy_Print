@@ -1,0 +1,6 @@
+{
+  "kind": "synthetic-contract",
+  "queueIdentifier": "REFERENCE_QUEUE",
+  "stdout": "request id is REFERENCE_QUEUE-321 (1 file(s))\n",
+  "expectedJobId": 321
+}

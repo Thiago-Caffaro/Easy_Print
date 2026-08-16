@@ -10,7 +10,7 @@ Do not replace missing evidence with invented output.
 
 Synthetic fixtures under `Contract/` exercise protocol-shape edge cases and are labeled `synthetic-contract` inside each file. They are test inputs, not evidence about a physical printer, driver, or CUPS version. Captured evidence and synthetic examples must remain visibly separate.
 
-The capability contracts cover the categories the product can safely render, missing categories, and preserved-but-non-renderable driver-specific options. They do not assert that the Epson reference device or any other printer supports those features.
+The capability contracts cover the categories the product can safely render, missing categories, and preserved-but-non-renderable driver-specific options. The submission contract covers the exact neutral one-file response shape used to parse a job identifier. They do not assert that the Epson reference device or any other printer supports those features or response variants.
 
 ## Layout
 
