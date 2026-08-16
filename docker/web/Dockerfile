@@ -1,8 +1,9 @@
 FROM php:8.5.9-cli-alpine AS php-base
 
-RUN apk add --no-cache cups-client icu-libs sqlite-libs \
-    && apk add --no-cache --virtual .build-dependencies icu-dev sqlite-dev \
-    && docker-php-ext-install intl pdo_sqlite \
+RUN apk add --no-cache cups-client icu-libs libjpeg-turbo libpng sqlite-libs \
+    && apk add --no-cache --virtual .build-dependencies icu-dev libjpeg-turbo-dev libpng-dev sqlite-dev \
+    && docker-php-ext-configure gd --with-jpeg \
+    && docker-php-ext-install gd intl pdo_sqlite \
     && apk del .build-dependencies
 
 FROM php-base AS dependencies

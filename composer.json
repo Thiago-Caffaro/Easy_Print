@@ -6,6 +6,7 @@
     "require": {
         "php": "^8.5",
         "ext-fileinfo": "*",
+        "ext-gd": "*",
         "ext-intl": "*",
         "ext-json": "*",
         "ext-pdo": "*",

@@ -9,7 +9,7 @@ The service applies these controls in order:
 1. map the PHP upload error without returning transport or filesystem details;
 2. reject missing, path-like, control-character, and non-PDF client names;
 3. enforce the configured size against both PSR-7 metadata and the moved file;
-4. resolve the storage directory and reject it when it is inside the public webroot;
+4. use the shared private-upload storage boundary and reject storage inside the public webroot;
 5. generate a 128-bit random lowercase hexadecimal filename with a `.pdf` suffix;
 6. move the upload to private storage without using any client path component;
 7. confirm the resolved destination remains inside the configured storage root;
