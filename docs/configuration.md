@@ -41,6 +41,19 @@ The container passes the upload and request-body limits into PHP as `upload_max_
 
 The process executable variables are deployment configuration, not browser input. CUPS adapters refer to the logical allowlist keys and never accept an executable or option name from an HTTP request.
 
+## Compose deployment inputs
+
+These values are consumed by Compose rather than the PHP configuration loader:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `WEB_BIND_ADDRESS` | `127.0.0.1` | Host address that publishes the Easy Print web port |
+| `WEB_PORT` | `8080` | Host port for Easy Print |
+| `CUPS_BIND_ADDRESS` | `127.0.0.1` | Host address that publishes the CUPS port |
+| `CUPS_PUBLIC_PORT` | `631` | Host port for exceptional CUPS administration access |
+
+Keep both bind addresses on loopback unless a reviewed LAN, Tailscale, or reverse-proxy pattern requires otherwise. Normal Easy Print users do not need access to the CUPS port. See [Private network deployment](network-deployment.md).
+
 ## Compose build metadata
 
 The following Compose inputs affect image naming or OCI labels and are not application runtime settings:
