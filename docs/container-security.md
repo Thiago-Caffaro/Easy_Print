@@ -16,7 +16,7 @@ The final image:
 
 At startup, PHP receives the configured upload and request-body limits and accepts only one uploaded file per request. Browser-facing limits and headers are also enforced inside the Slim application. The private CSRF signing secret is generated with operating-system randomness in the temporary tmpfs and receives mode `0600`; restarting the container intentionally invalidates existing anonymous browser sessions.
 
-The Compose health check exercises the local HTTP endpoint. It does not print, mutate a queue, or grant access to the CUPS administration interface.
+The Compose health check exercises only `GET /health/live` on the local HTTP endpoint. It does not open SQLite, contact CUPS, print, mutate a queue, or grant access to the CUPS administration interface.
 
 ## Build inputs and metadata
 

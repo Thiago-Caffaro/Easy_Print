@@ -25,6 +25,7 @@ final class ConfigurationLoaderTest extends TestCase
         self::assertSame(27_262_976, $config->requestBodyMaxBytes);
         self::assertSame(16_384, $config->requestHeaderMaxBytes);
         self::assertFalse($config->cookieSecure);
+        self::assertSame('info', $config->logLevel);
         self::assertSame(16_384, $config->imageMaxWidth);
         self::assertSame(16_384, $config->imageMaxHeight);
         self::assertSame(50_000_000, $config->imageMaxPixels);
@@ -55,6 +56,7 @@ final class ConfigurationLoaderTest extends TestCase
         yield 'upload limit is too small' => [['UPLOAD_MAX_BYTES' => '12'], 'UPLOAD_MAX_BYTES'];
         yield 'request body is below upload limit' => [['REQUEST_BODY_MAX_BYTES' => '1048576'], 'REQUEST_BODY_MAX_BYTES'];
         yield 'request headers are unbounded' => [['REQUEST_HEADER_MAX_BYTES' => '65537'], 'REQUEST_HEADER_MAX_BYTES'];
+        yield 'log level is unsupported' => [['LOG_LEVEL' => 'verbose'], 'LOG_LEVEL'];
         yield 'image width is unbounded' => [['IMAGE_MAX_WIDTH' => '100001'], 'IMAGE_MAX_WIDTH'];
         yield 'image pixel limit is empty' => [['IMAGE_MAX_PIXELS' => '0'], 'IMAGE_MAX_PIXELS'];
         yield 'timeout is unbounded' => [['PROCESS_TIMEOUT_SECONDS' => '0'], 'PROCESS_TIMEOUT_SECONDS'];

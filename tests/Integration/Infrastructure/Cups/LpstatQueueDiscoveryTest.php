@@ -9,11 +9,15 @@ use function dirname;
 use EasyPrint\Domain\Printer\CupsConnectivity;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatQueueDiscovery;
+use EasyPrint\Infrastructure\Observability\CorrelationContext;
+use EasyPrint\Infrastructure\Observability\JsonLineLogger;
 use EasyPrint\Infrastructure\Process\ProcessFailureReason;
 use EasyPrint\Infrastructure\Process\ProcessResult;
 use EasyPrint\Tests\Support\FakeProcessRunner;
 
+use function fclose;
 use function file_get_contents;
+use function fopen;
 use function is_array;
 use function json_decode;
 
@@ -21,6 +25,9 @@ use const JSON_THROW_ON_ERROR;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function rewind;
+use function stream_get_contents;
 
 final class LpstatQueueDiscoveryTest extends TestCase
 {
@@ -137,6 +144,40 @@ final class LpstatQueueDiscoveryTest extends TestCase
 
         self::assertSame(CupsConnectivity::Available, $snapshot->connectivity);
         self::assertSame('unavailable', $snapshot->queues[0]->state->value);
+    }
+
+    public function testAdapterLogsCarryCorrelationWithoutCupsOutputOrServerDetails(): void
+    {
+        $stream = fopen('php://memory', 'w+b');
+        self::assertIsResource($stream);
+        $context = new CorrelationContext();
+        $context->begin('0123456789abcdef0123456789abcdef');
+        $runner = new FakeProcessRunner([
+            self::failure(ProcessFailureReason::NonZeroExit, 'private scheduler output at cups.internal'),
+        ]);
+        $discovery = new LpstatQueueDiscovery(
+            processRunner: $runner,
+            parser: new LpstatOutputParser(),
+            host: 'cups.internal',
+            port: 631,
+            requireEncryption: false,
+            logger: new JsonLineLogger($context, $stream),
+        );
+
+        $discovery->discover();
+        rewind($stream);
+        $log = stream_get_contents($stream);
+        self::assertIsString($log);
+
+        self::assertStringContainsString('0123456789abcdef0123456789abcdef', $log);
+        self::assertStringContainsString('cups.queue_discovery.completed', $log);
+        self::assertStringContainsString('"connectivity":"unavailable"', $log);
+        self::assertStringContainsString('"queue_count":0', $log);
+        self::assertStringNotContainsString('private scheduler output', $log);
+        self::assertStringNotContainsString('cups.internal', $log);
+
+        $context->end('0123456789abcdef0123456789abcdef');
+        fclose($stream);
     }
 
     private function discovery(FakeProcessRunner $runner): LpstatQueueDiscovery

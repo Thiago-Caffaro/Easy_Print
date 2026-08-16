@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use EasyPrint\Application\Health\ReadinessProbe;
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
 use EasyPrint\Http\Action\HomeAction;
+use EasyPrint\Http\Action\LivenessAction;
+use EasyPrint\Http\Action\ReadinessAction;
+use EasyPrint\Http\Middleware\CorrelationIdMiddleware;
 use EasyPrint\Http\Middleware\CsrfProtectionMiddleware;
+use EasyPrint\Http\Middleware\ExceptionLoggingMiddleware;
 use EasyPrint\Http\Middleware\RequestLimitsMiddleware;
 use EasyPrint\Http\Middleware\SecurityHeadersMiddleware;
 use EasyPrint\Http\QueueSelectionCookie;
@@ -14,6 +19,9 @@ use EasyPrint\Infrastructure\Configuration\ConfigurationLoader;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatQueueDiscovery;
 use EasyPrint\Infrastructure\Filesystem\RuntimeDirectories;
+use EasyPrint\Infrastructure\Health\OperationalReadinessProbe;
+use EasyPrint\Infrastructure\Observability\CorrelationContext;
+use EasyPrint\Infrastructure\Observability\JsonLineLogger;
 use EasyPrint\Infrastructure\Process\AllowedProcessRunner;
 use EasyPrint\Infrastructure\Security\RuntimeSecret;
 use EasyPrint\Translation\LocaleResolver;
@@ -25,10 +33,13 @@ return static function (
     ?array $environment = null,
     ?string $projectRoot = null,
     ?QueueDiscovery $queueDiscovery = null,
+    ?ReadinessProbe $readinessProbe = null,
 ): Slim\App {
     $root = $projectRoot ?? dirname(__DIR__);
     $config = ConfigurationLoader::load($environment, $root);
     RuntimeDirectories::ensure($config->databasePath, $config->temporaryPath);
+    $correlationContext = new CorrelationContext();
+    $logger = JsonLineLogger::toStderr($correlationContext, $config->logLevel);
 
     $translator = Translator::fromDirectory(
         $root . '/resources/translations',
@@ -48,6 +59,13 @@ return static function (
         host: $config->cupsHost,
         port: $config->cupsPort,
         requireEncryption: 'required' === $config->cupsEncryption,
+        logger: $logger,
+    );
+    $readinessProbe ??= new OperationalReadinessProbe(
+        databasePath: $config->databasePath,
+        temporaryPath: $config->temporaryPath,
+        queueDiscovery: $queueDiscovery,
+        logger: $logger,
     );
     $homeAction = new HomeAction(
         config: $config,
@@ -66,6 +84,8 @@ return static function (
     }
 
     $app->get('/', $homeAction);
+    $app->get('/health/live', new LivenessAction());
+    $app->get('/health/ready', new ReadinessAction($readinessProbe));
     $app->addRoutingMiddleware();
     $app->add(new CsrfProtectionMiddleware(
         tokens: new CsrfTokenManager(RuntimeSecret::loadOrCreate($config->temporaryPath . '/csrf-secret')),
@@ -78,8 +98,10 @@ return static function (
         maximumBodyBytes: $config->requestBodyMaxBytes,
         maximumHeaderBytes: $config->requestHeaderMaxBytes,
     ));
-    $app->addErrorMiddleware(false, true, true);
+    $app->add(new ExceptionLoggingMiddleware($logger));
+    $app->addErrorMiddleware(false, false, false);
     $app->add(new SecurityHeadersMiddleware());
+    $app->add(new CorrelationIdMiddleware($correlationContext, $logger));
 
     return $app;
 };

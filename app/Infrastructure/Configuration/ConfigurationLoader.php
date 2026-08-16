@@ -70,6 +70,7 @@ final class ConfigurationLoader
             debug: self::boolean('APP_DEBUG', $read('APP_DEBUG', 'false')),
             basePath: self::basePath($read('APP_BASE_PATH', '')),
             cookieSecure: self::boolean('COOKIE_SECURE', $read('COOKIE_SECURE', 'false')),
+            logLevel: self::choice('LOG_LEVEL', $read('LOG_LEVEL', 'info'), ['debug', 'info', 'notice', 'warning', 'error', 'critical']),
             defaultLocale: $defaultLocale,
             enabledLocales: $enabledLocales,
             cupsHost: self::host($read('CUPS_HOST', 'cups')),

@@ -10,6 +10,7 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 | `APP_DEBUG` | `false` | Boolean development signal; browser error details remain disabled |
 | `APP_BASE_PATH` | empty | Optional absolute URL path using safe path characters and no traversal segments |
 | `COOKIE_SECURE` | `false` | Adds `Secure` to application cookies; set to `true` whenever the browser uses HTTPS |
+| `LOG_LEVEL` | `info` | Minimum structured application level: `debug`, `info`, `notice`, `warning`, `error`, or `critical` |
 | `APP_LOCALE` | `pt-BR` | Default interface locale; must be enabled |
 | `APP_ENABLED_LOCALES` | `pt-BR,en` | Comma-separated subset of the shipped catalogs |
 | `CUPS_HOST` | `cups` | DNS hostname, IPv4 address, or IPv6 address without a scheme or port |

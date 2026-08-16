@@ -61,6 +61,6 @@ EXPOSE 8080
 STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
-    CMD php -r "exit(false === @file_get_contents('http://127.0.0.1:8080/') ? 1 : 0);"
+    CMD php -r '$base = rtrim((string) getenv("APP_BASE_PATH"), "/"); exit(false === @file_get_contents("http://127.0.0.1:8080" . $base . "/health/live") ? 1 : 0);'
 
 ENTRYPOINT ["/usr/local/bin/easy-print-entrypoint"]

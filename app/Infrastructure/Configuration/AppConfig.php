@@ -15,6 +15,7 @@ final readonly class AppConfig
         public bool $debug,
         public string $basePath,
         public bool $cookieSecure,
+        public string $logLevel,
         public string $defaultLocale,
         public array $enabledLocales,
         public string $cupsHost,

@@ -29,6 +29,7 @@ Use [Private network deployment](network-deployment.md) to choose and verify the
 - Has a persistent application-data volume and a private tmpfs for uploaded documents.
 - Runs as UID/GID 10001 with a read-only root filesystem, no Linux capabilities, and no USB devices.
 - Applies SQLite migrations before starting the HTTP process.
+- Uses dependency-free liveness for the container health check; readiness and CUPS state remain separately observable.
 - Accepts an explicit container command after migrations, which CI uses for the read-only CUPS discovery smoke check.
 
 ### CUPS and Avahi
