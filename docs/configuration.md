@@ -21,7 +21,7 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 | `CUPS_CANCEL_PATH` | `/usr/bin/cancel` | Absolute allowlisted executable path |
 | `DATABASE_PATH` | project storage path | Absolute SQLite file path |
 | `TEMPORARY_PATH` | project storage path | Absolute private temporary directory |
-| `UPLOAD_MAX_BYTES` | `26214400` | 1 KiB through 100 MiB; HTTP streaming enforcement follows in the upload slice |
+| `UPLOAD_MAX_BYTES` | `26214400` | 1 KiB through 100 MiB; enforced against declared and actual PDF size |
 | `TEMP_FILE_TTL_SECONDS` | `3600` | 60 seconds through 24 hours |
 | `HISTORY_RETENTION_DAYS` | `90` | 1 through 3650 days |
 | `ERROR_RETENTION_DAYS` | `30` | 1 through 365 days |
