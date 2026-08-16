@@ -9,11 +9,14 @@
     },
     "queues": {
       "stdout": ""
+    },
+    "states": {
+      "stdout": ""
     }
   },
   "expected": {
     "connectivity": "available",
     "defaultQueueIdentifier": null,
-    "queueIdentifiers": []
+    "queues": []
   }
 }

@@ -52,6 +52,7 @@ final class ConfigurationLoaderTest extends TestCase
         yield 'locale is unsupported' => [['APP_LOCALE' => 'fr'], 'APP_LOCALE'];
         yield 'default locale is not enabled' => [['APP_LOCALE' => 'en', 'APP_ENABLED_LOCALES' => 'pt-BR'], 'APP_LOCALE'];
         yield 'executable path is relative' => [['CUPS_LP_PATH' => 'lp'], 'CUPS_LP_PATH'];
+        yield 'base path contains header delimiters' => [['APP_BASE_PATH' => "/safe\r\nSet-Cookie: unsafe=1"], 'APP_BASE_PATH'];
     }
 
     public function testStartupErrorsDoNotRepeatTheInvalidPrivateValue(): void

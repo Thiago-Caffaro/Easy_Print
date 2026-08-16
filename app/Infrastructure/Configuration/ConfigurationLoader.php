@@ -129,7 +129,11 @@ final class ConfigurationLoader
     {
         $value = rtrim(trim($value), '/');
 
-        if ('' !== $value && (!str_starts_with($value, '/') || str_contains($value, '..'))) {
+        if ('' !== $value && (
+            !str_starts_with($value, '/')
+            || str_contains($value, '..')
+            || 1 !== preg_match('/^\/[A-Za-z0-9._~\/-]*$/D', $value)
+        )) {
             throw new ConfigurationException('APP_BASE_PATH must be empty or an absolute URL path without traversal segments.');
         }
 

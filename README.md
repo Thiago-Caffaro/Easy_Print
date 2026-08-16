@@ -72,7 +72,7 @@ docker compose up --build
 
 The web interface binds to `127.0.0.1:8080` and CUPS binds to `127.0.0.1:631` by default. Change bind addresses only when the host firewall, LAN, Tailscale, or reverse proxy is intentionally providing the access boundary.
 
-For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), migrations and retention fields are covered in [Database](docs/database.md), and the structured discovery contract is described in [CUPS queue discovery](docs/cups-discovery.md).
+For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), migrations and retention fields are covered in [Database](docs/database.md), and the runtime contracts are described in [CUPS queue discovery](docs/cups-discovery.md) and [Queue selection and state](docs/queue-selection.md).
 
 ## Architecture
 

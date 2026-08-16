@@ -6,6 +6,8 @@ namespace EasyPrint\Infrastructure\Cups;
 
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Domain\Printer\CupsConnectivity;
+use EasyPrint\Domain\Printer\PrinterQueue;
+use EasyPrint\Domain\Printer\PrinterState;
 use EasyPrint\Domain\Printer\QueueSnapshot;
 use EasyPrint\Infrastructure\Process\ProcessFailureReason;
 use EasyPrint\Infrastructure\Process\ProcessResult;
@@ -49,14 +51,44 @@ final readonly class LpstatQueueDiscovery implements QueueDiscovery
                 return QueueSnapshot::failed($this->connectivityForFailure($queues));
             }
 
+            $identifiers = $this->parser->queueIdentifiers($queues->stdout);
+            $states = $this->queueStates($identifiers);
+
             return new QueueSnapshot(
                 connectivity: CupsConnectivity::Available,
-                queueIdentifiers: $this->parser->queueIdentifiers($queues->stdout),
+                queues: array_map(
+                    static fn(string $identifier): PrinterQueue => new PrinterQueue($identifier, $states[$identifier]),
+                    $identifiers,
+                ),
                 defaultQueueIdentifier: $this->parser->defaultQueueIdentifier($default->stdout),
             );
         } catch (MalformedLpstatOutput) {
             return QueueSnapshot::failed(CupsConnectivity::MalformedResponse);
         }
+    }
+
+    /**
+     * @param list<string> $identifiers
+     *
+     * @return array<string,PrinterState>
+     */
+    private function queueStates(array $identifiers): array
+    {
+        if ([] === $identifiers) {
+            return [];
+        }
+
+        $states = $this->run(['-p']);
+
+        if (!$states->succeeded()) {
+            $fallback = ProcessFailureReason::OutputLimit === $states->failureReason
+                ? PrinterState::Unknown
+                : PrinterState::Unavailable;
+
+            return array_fill_keys($identifiers, $fallback);
+        }
+
+        return $this->parser->queueStates($states->stdout, $identifiers);
     }
 
     /**

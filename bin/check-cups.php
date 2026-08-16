@@ -33,7 +33,10 @@ $snapshot = $discovery->discover();
 echo json_encode([
     'connectivity' => $snapshot->connectivity->value,
     'defaultQueueIdentifier' => $snapshot->defaultQueueIdentifier,
-    'queueIdentifiers' => $snapshot->queueIdentifiers,
+    'queues' => array_map(static fn(EasyPrint\Domain\Printer\PrinterQueue $queue): array => [
+        'identifier' => $queue->identifier,
+        'state' => $queue->state->value,
+    ], $snapshot->queues),
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR), PHP_EOL;
 
 exit(CupsConnectivity::Available === $snapshot->connectivity ? 0 : 1);

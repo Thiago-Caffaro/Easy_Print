@@ -32,18 +32,28 @@ final class LpstatQueueDiscoveryTest extends TestCase
             $this->success($fixture['commands']['scheduler']['stdout']),
             $this->success($fixture['commands']['default']['stdout']),
             $this->success($fixture['commands']['queues']['stdout']),
+            $this->success($fixture['commands']['states']['stdout']),
         ]);
 
         $snapshot = $this->discovery($runner)->discover();
 
         self::assertSame($fixture['expected']['connectivity'], $snapshot->connectivity->value);
         self::assertSame($fixture['expected']['defaultQueueIdentifier'], $snapshot->defaultQueueIdentifier);
-        self::assertSame($fixture['expected']['queueIdentifiers'], $snapshot->queueIdentifiers);
-        self::assertSame([
+        self::assertSame($fixture['expected']['queues'], array_map(static fn($queue): array => [
+            'identifier' => $queue->identifier,
+            'state' => $queue->state->value,
+        ], $snapshot->queues));
+        $expectedCalls = [
             ['executableKey' => 'lpstat', 'arguments' => ['-h', 'cups.internal:631', '-r'], 'environmentOverrides' => []],
             ['executableKey' => 'lpstat', 'arguments' => ['-h', 'cups.internal:631', '-d'], 'environmentOverrides' => []],
             ['executableKey' => 'lpstat', 'arguments' => ['-h', 'cups.internal:631', '-e'], 'environmentOverrides' => []],
-        ], $runner->calls);
+        ];
+
+        if ([] !== $fixture['expected']['queues']) {
+            $expectedCalls[] = ['executableKey' => 'lpstat', 'arguments' => ['-h', 'cups.internal:631', '-p'], 'environmentOverrides' => []];
+        }
+
+        self::assertSame($expectedCalls, $runner->calls);
     }
 
     /**
@@ -73,7 +83,7 @@ final class LpstatQueueDiscoveryTest extends TestCase
         $snapshot = $this->discovery($runner)->discover();
 
         self::assertSame($expected, $snapshot->connectivity);
-        self::assertSame([], $snapshot->queueIdentifiers);
+        self::assertSame([], $snapshot->queues);
         self::assertNull($snapshot->defaultQueueIdentifier);
     }
 
@@ -95,7 +105,7 @@ final class LpstatQueueDiscoveryTest extends TestCase
         $snapshot = $this->discovery($runner)->discover();
 
         self::assertSame(CupsConnectivity::MalformedResponse, $snapshot->connectivity);
-        self::assertSame([], $snapshot->queueIdentifiers);
+        self::assertSame([], $snapshot->queues);
     }
 
     public function testItRequestsEncryptionAndFormatsAnIpv6ServerAddress(): void
@@ -114,6 +124,21 @@ final class LpstatQueueDiscoveryTest extends TestCase
         self::assertSame(['-E', '-h', '[2001:db8::10]:8631', '-r'], $runner->calls[0]['arguments']);
     }
 
+    public function testAStateLookupFailureKeepsConnectivityAndMarksTheQueueUnavailable(): void
+    {
+        $runner = new FakeProcessRunner([
+            $this->success("scheduler is running\n"),
+            $this->success("system default destination: REFERENCE_QUEUE\n"),
+            $this->success("REFERENCE_QUEUE\n"),
+            self::failure(ProcessFailureReason::TimedOut),
+        ]);
+
+        $snapshot = $this->discovery($runner)->discover();
+
+        self::assertSame(CupsConnectivity::Available, $snapshot->connectivity);
+        self::assertSame('unavailable', $snapshot->queues[0]->state->value);
+    }
+
     private function discovery(FakeProcessRunner $runner): LpstatQueueDiscovery
     {
         return new LpstatQueueDiscovery(
@@ -127,8 +152,8 @@ final class LpstatQueueDiscoveryTest extends TestCase
 
     /**
      * @return array{
-     *   commands:array{scheduler:array{stdout:string},default:array{stdout:string},queues:array{stdout:string}},
-     *   expected:array{connectivity:string,defaultQueueIdentifier:?string,queueIdentifiers:list<string>}
+     *   commands:array{scheduler:array{stdout:string},default:array{stdout:string},queues:array{stdout:string},states:array{stdout:string}},
+     *   expected:array{connectivity:string,defaultQueueIdentifier:?string,queues:list<array{identifier:string,state:string}>}
      * }
      */
     private function fixture(string $name): array
@@ -140,8 +165,8 @@ final class LpstatQueueDiscoveryTest extends TestCase
         self::assertIsArray($fixture);
 
         /** @var array{
-         *   commands:array{scheduler:array{stdout:string},default:array{stdout:string},queues:array{stdout:string}},
-         *   expected:array{connectivity:string,defaultQueueIdentifier:?string,queueIdentifiers:list<string>}
+         *   commands:array{scheduler:array{stdout:string},default:array{stdout:string},queues:array{stdout:string},states:array{stdout:string}},
+         *   expected:array{connectivity:string,defaultQueueIdentifier:?string,queues:list<array{identifier:string,state:string}>}
          * } $fixture
          */
         return $fixture;

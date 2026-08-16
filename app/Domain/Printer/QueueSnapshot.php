@@ -6,33 +6,26 @@ namespace EasyPrint\Domain\Printer;
 
 use function array_unique;
 use function count;
-use function in_array;
 
 use InvalidArgumentException;
-
-use function is_string;
 
 final readonly class QueueSnapshot
 {
     /**
-     * @param list<string> $queueIdentifiers
+     * @param list<PrinterQueue> $queues
      */
     public function __construct(
         public CupsConnectivity $connectivity,
-        public array $queueIdentifiers = [],
+        public array $queues = [],
         public ?string $defaultQueueIdentifier = null,
     ) {
-        if (CupsConnectivity::Available !== $connectivity && ([] !== $queueIdentifiers || null !== $defaultQueueIdentifier)) {
+        if (CupsConnectivity::Available !== $connectivity && ([] !== $queues || null !== $defaultQueueIdentifier)) {
             throw new InvalidArgumentException('Unavailable snapshots cannot contain queue data.');
         }
 
-        foreach ($queueIdentifiers as $identifier) {
-            if (!is_string($identifier) || '' === $identifier) {
-                throw new InvalidArgumentException('Queue identifiers must be non-empty strings.');
-            }
-        }
+        $identifiers = $this->queueIdentifiers();
 
-        if (count($queueIdentifiers) !== count(array_unique($queueIdentifiers))) {
+        if (count($identifiers) !== count(array_unique($identifiers))) {
             throw new InvalidArgumentException('Queue identifiers must be unique.');
         }
     }
@@ -48,6 +41,25 @@ final readonly class QueueSnapshot
 
     public function contains(string $queueIdentifier): bool
     {
-        return in_array($queueIdentifier, $this->queueIdentifiers, true);
+        return null !== $this->queue($queueIdentifier);
+    }
+
+    public function queue(string $queueIdentifier): ?PrinterQueue
+    {
+        foreach ($this->queues as $queue) {
+            if ($queueIdentifier === $queue->identifier) {
+                return $queue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function queueIdentifiers(): array
+    {
+        return array_map(static fn(PrinterQueue $queue): string => $queue->identifier, $this->queues);
     }
 }
