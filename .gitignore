@@ -5,6 +5,7 @@
 /.phpunit.result.cache
 /coverage/
 /vendor/
+/node_modules/
 
 /storage/database/*
 !/storage/database/.gitignore

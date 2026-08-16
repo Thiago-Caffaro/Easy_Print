@@ -107,6 +107,50 @@ final class LpstatOutputParser
         return $states;
     }
 
+    /**
+     * @param list<string> $queueIdentifiers
+     *
+     * @return array<string,int>
+     */
+    public function processingJobIds(string $output, array $queueIdentifiers): array
+    {
+        if ('' === trim($output)) {
+            return [];
+        }
+
+        $lines = preg_split('/\r\n|\n|\r/', rtrim($output, "\r\n"));
+
+        if (false === $lines) {
+            return [];
+        }
+
+        $processing = [];
+
+        foreach ($lines as $line) {
+            foreach ($queueIdentifiers as $identifier) {
+                $prefix = 'printer ' . $identifier . ' now printing ' . $identifier . '-';
+
+                if (!str_starts_with($line, $prefix)) {
+                    continue;
+                }
+
+                $suffix = substr($line, strlen($prefix));
+
+                if (1 === preg_match('/^(?<job>[1-9][0-9]*)\.  enabled since /D', $suffix, $matches)) {
+                    $jobId = filter_var($matches['job'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+                    if (false !== $jobId) {
+                        $processing[$identifier] = $jobId;
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return $processing;
+    }
+
     private function queueIdentifier(string $identifier): string
     {
         if ('' === $identifier || strlen($identifier) > 127 || 1 === preg_match('/[\x00-\x1F\x7F]/', $identifier)) {

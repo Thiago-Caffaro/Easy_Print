@@ -77,6 +77,9 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('Easy Print está pronto para começar', $body);
         self::assertStringContainsString('Configuração válida', $body);
         self::assertStringContainsString('REFERENCE_QUEUE', $body);
+        self::assertStringContainsString('/assets/htmx.min.js', $body);
+        self::assertStringContainsString('hx-trigger="load"', $body);
+        self::assertStringContainsString('/jobs/active?lang=pt-BR', $body);
         self::assertStringContainsString('Pronta', $body);
         self::assertStringContainsString('easy_print_queue=REFERENCE_QUEUE', $response->getHeaderLine('Set-Cookie'));
         self::assertStringContainsString('easy_print_session=', $response->getHeaderLine('Set-Cookie'));
@@ -125,6 +128,19 @@ final class HomeActionTest extends TestCase
 
         self::assertStringContainsString('&lt;unsafe&gt;', $body);
         self::assertStringNotContainsString('easy_print_queue=', $response->getHeaderLine('Set-Cookie'));
+    }
+
+    public function testThePinnedHtmxAssetIsAvailableThroughTheApplicationRouter(): void
+    {
+        $request = new ServerRequestFactory()->createServerRequest('GET', '/assets/htmx.min.js');
+
+        $response = $this->application->handle($request);
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('text/javascript; charset=UTF-8', $response->getHeaderLine('Content-Type'));
+        self::assertStringContainsString('htmx', $body);
+        self::assertSame((string) strlen($body), $response->getHeaderLine('Content-Length'));
     }
 
     private function snapshot(): QueueSnapshot

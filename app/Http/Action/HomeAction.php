@@ -74,6 +74,11 @@ final readonly class HomeAction
             'languageLabel' => $t('home.language_label'),
             'portugueseLabel' => $t('locale.pt-BR'),
             'englishLabel' => $t('locale.en'),
+            'stylesheetUrl' => $this->config->basePath . '/assets/app.css',
+            'htmxAssetUrl' => $this->config->basePath . '/assets/htmx.min.js',
+            'activeJobsUrl' => $this->config->basePath . '/jobs/active?lang=' . rawurlencode($locale),
+            'activeJobsHeading' => $t('jobs.heading'),
+            'activeJobsLoading' => $t('jobs.loading'),
         ]);
 
         return $this->selectionCookie->apply($response, $selection);
