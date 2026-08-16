@@ -1,0 +1,10 @@
+.env
+.git
+.github
+.php-cs-fixer.cache
+.phpunit.cache
+coverage
+storage/database/*
+storage/logs/*
+storage/temporary/*
+vendor

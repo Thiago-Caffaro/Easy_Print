@@ -21,14 +21,17 @@ Thank you for helping improve Easy Print. The project favors small, reviewable c
 
 ## Required checks
 
-The exact commands will be added with the foundation scaffold. The intended quality gate includes:
+Install dependencies with Composer, then run the complete local gate:
 
-- Composer validation and security audit.
-- Code formatting.
-- Static analysis.
-- Unit and integration tests.
-- Container build.
-- Markdown and configuration validation.
+```bash
+composer install
+composer check
+npx --yes markdownlint-cli2@0.23.2
+docker compose config --quiet
+docker compose build web cups
+```
+
+Use `composer format` to apply the PHP formatting rules. The `composer check` command validates Composer metadata and advisories, checks formatting, runs PHPStan, and executes unit and integration tests. GitHub Actions repeats these checks and builds both reference images.
 
 Never report a check as passing unless it was executed.
 

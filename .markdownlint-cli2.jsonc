@@ -1,0 +1,26 @@
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": {
+      "siblings_only": true
+    },
+    "MD034": false,
+    "MD033": {
+      "allowed_elements": [
+        "a",
+        "div",
+        "h1",
+        "img",
+        "p",
+        "strong",
+        "sub"
+      ]
+    },
+    "MD041": false
+  },
+  "globs": [
+    "**/*.md",
+    "!vendor/**"
+  ]
+}

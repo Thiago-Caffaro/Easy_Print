@@ -1,0 +1,56 @@
+{
+    "name": "thiago-caffaro/easy-print",
+    "description": "A printer-agnostic, self-hosted web interface for CUPS.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-intl": "*",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "ext-pdo_sqlite": "*",
+        "slim/psr7": "^1.7",
+        "slim/slim": "^4.15",
+        "symfony/process": "^8.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "EasyPrint\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EasyPrint\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "validate:composer": "composer validate --strict",
+        "audit:dependencies": "composer audit --locked",
+        "format": "php-cs-fixer fix --verbose",
+        "format:check": "php-cs-fixer check --diff --verbose",
+        "analyse": "phpstan analyse --no-progress",
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "check": [
+            "@validate:composer",
+            "@audit:dependencies",
+            "@format:check",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "allow-plugins": {},
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

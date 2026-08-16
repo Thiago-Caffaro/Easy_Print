@@ -1,0 +1,14 @@
+/.env
+/.php-cs-fixer.cache
+/.phpstan-cache/
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/vendor/
+
+/storage/database/*
+!/storage/database/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/temporary/*
+!/storage/temporary/.gitignore

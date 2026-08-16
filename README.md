@@ -41,7 +41,7 @@ The product is intentionally small:
 ## MVP scope
 
 | Capability | v1.0 intent |
-|---|---|
+| --- | --- |
 | CUPS connectivity | Validate one configured CUPS server and report availability |
 | Printer queues | List and select queues already configured in CUPS |
 | Dynamic options | Render only capabilities advertised by the selected queue |
@@ -60,6 +60,19 @@ The product is intentionally small:
 - Public internet exposure, SaaS tenancy, billing, or user accounts.
 - Office-document conversion, scanner support, or ARM64 images.
 - Hardcoded Epson-only settings or promises about unsupported hardware features.
+
+## Development snapshot
+
+The Foundation branch provides the first executable Slim application, validated environment configuration, Portuguese and English catalogs, a transactional SQLite migration mechanism, a bounded allowlisted process runner, and the separate web/CUPS Docker Compose topology.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The web interface binds to `127.0.0.1:8080` and CUPS binds to `127.0.0.1:631` by default. Change bind addresses only when the host firewall, LAN, Tailscale, or reverse proxy is intentionally providing the access boundary.
+
+For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), while migrations and retention fields are covered in [Database](docs/database.md).
 
 ## Architecture
 
@@ -130,7 +143,7 @@ Linux Docker on AMD64 is the primary target. TrueNAS SCALE uses the same service
 ## Roadmap
 
 | Phase | Outcome |
-|---|---|
+| --- | --- |
 | Foundation | Repository governance, PHP/Slim bootstrap, container topology, CI, configuration, fixtures |
 | MVP Printing | Queue discovery, capability-driven form, PDF/PNG/JPEG upload, submission, jobs, cancellation, history |
 | Operational Hardening | Security controls, cleanup, observability, production containers, recovery documentation |
