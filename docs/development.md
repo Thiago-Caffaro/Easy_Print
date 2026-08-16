@@ -20,6 +20,8 @@ php -S 127.0.0.1:8080 -t public public/router.php
 
 The application reads environment variables directly. The PHP development server does not load `.env`; export the values in the shell or use Docker Compose when defaults are insufficient.
 
+The bare development command above does not inject PHP upload directives. Docker Compose uses the production entrypoint and is the reference for verifying `post_max_size`, `upload_max_filesize`, and `max_file_uploads`. Application-level request limits remain active in both modes.
+
 ## Quality gate
 
 ```bash
@@ -62,3 +64,5 @@ The initial route is server-rendered and can be checked in both supported locale
 - `http://127.0.0.1:8080/?lang=en` for English.
 
 The explicit `lang` query parameter is the first locale-selection strategy. Invalid or disabled locale values fall back to the configured default. Account-based preferences are outside v1.0.
+
+Every future `POST`, `PUT`, `PATCH`, or `DELETE` route is protected automatically. Server-rendered forms must use the `easy_print.csrf_token` request attribute in a hidden `_csrf` field. HTMX requests may send the same value in `X-CSRF-Token`. Do not exempt mutation routes; a read-only health endpoint must use `GET` or `HEAD`.

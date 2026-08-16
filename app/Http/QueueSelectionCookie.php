@@ -19,7 +19,10 @@ final readonly class QueueSelectionCookie
 {
     private const NAME = 'easy_print_queue';
 
-    public function __construct(private string $basePath) {}
+    public function __construct(
+        private string $basePath,
+        private bool $secure,
+    ) {}
 
     public function read(ServerRequestInterface $request): ?string
     {
@@ -47,9 +50,14 @@ final readonly class QueueSelectionCookie
             $maxAge = 31_536_000;
         }
 
+        $attributes = '; Path=' . $path . '; Max-Age=' . $maxAge . '; HttpOnly; SameSite=Lax';
+        if ($this->secure) {
+            $attributes .= '; Secure';
+        }
+
         return $response->withAddedHeader(
             'Set-Cookie',
-            self::NAME . '=' . $value . '; Path=' . $path . '; Max-Age=' . $maxAge . '; HttpOnly; SameSite=Lax',
+            self::NAME . '=' . $value . $attributes,
         );
     }
 }

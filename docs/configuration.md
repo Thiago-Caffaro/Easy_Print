@@ -9,6 +9,7 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 | `APP_ENV` | `production` | `production`, `development`, or `testing` |
 | `APP_DEBUG` | `false` | Boolean development signal; browser error details remain disabled |
 | `APP_BASE_PATH` | empty | Optional absolute URL path using safe path characters and no traversal segments |
+| `COOKIE_SECURE` | `false` | Adds `Secure` to application cookies; set to `true` whenever the browser uses HTTPS |
 | `APP_LOCALE` | `pt-BR` | Default interface locale; must be enabled |
 | `APP_ENABLED_LOCALES` | `pt-BR,en` | Comma-separated subset of the shipped catalogs |
 | `CUPS_HOST` | `cups` | DNS hostname, IPv4 address, or IPv6 address without a scheme or port |
@@ -22,6 +23,8 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 | `DATABASE_PATH` | project storage path | Absolute SQLite file path |
 | `TEMPORARY_PATH` | project storage path | Absolute private temporary directory |
 | `UPLOAD_MAX_BYTES` | `26214400` | 1 KiB through 100 MiB; enforced against declared and actual document size |
+| `REQUEST_BODY_MAX_BYTES` | `27262976` | 1 KiB through 110 MiB and not below the upload limit; includes multipart overhead |
+| `REQUEST_HEADER_MAX_BYTES` | `16384` | 1 KiB through 64 KiB; maximum parsed HTTP header block accepted by the application |
 | `IMAGE_MAX_WIDTH` | `16384` | Maximum decoded image width, from 1 through 100,000 pixels |
 | `IMAGE_MAX_HEIGHT` | `16384` | Maximum decoded image height, from 1 through 100,000 pixels |
 | `IMAGE_MAX_PIXELS` | `50000000` | Maximum width × height, from 1 through 250 million pixels |
@@ -32,7 +35,9 @@ Committed defaults contain no credentials or private addresses. `.env.example` i
 | `PROCESS_TIMEOUT_SECONDS` | `15` | 1 through 120 seconds |
 | `PROCESS_OUTPUT_MAX_BYTES` | `262144` | 1 KiB through 1 MiB across stdout and stderr |
 
-The base path is also used in the queue-selection cookie. Its restricted character set prevents response-header injection as well as path traversal.
+The base path is also used in application cookies. Its restricted character set prevents response-header injection as well as path traversal. `COOKIE_SECURE=false` supports the localhost-only HTTP default; it must not remain false after TLS is enabled at a reverse proxy.
+
+The container passes the upload and request-body limits into PHP as `upload_max_filesize` and `post_max_size`. A reverse proxy must apply the same or stricter body and header limits before forwarding traffic. See [HTTP security](http-security.md) for the complete enforcement contract.
 
 The process executable variables are deployment configuration, not browser input. CUPS adapters refer to the logical allowlist keys and never accept an executable or option name from an HTTP request.
 

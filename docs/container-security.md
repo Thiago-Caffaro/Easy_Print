@@ -14,6 +14,8 @@ The final image:
 - exposes only the application port and reaches CUPS through the private backend network;
 - publishes OCI source, revision, version, creation, license, and documentation labels.
 
+At startup, PHP receives the configured upload and request-body limits and accepts only one uploaded file per request. Browser-facing limits and headers are also enforced inside the Slim application. The private CSRF signing secret is generated with operating-system randomness in the temporary tmpfs and receives mode `0600`; restarting the container intentionally invalidates existing anonymous browser sessions.
+
 The Compose health check exercises the local HTTP endpoint. It does not print, mutate a queue, or grant access to the CUPS administration interface.
 
 ## Build inputs and metadata
@@ -42,7 +44,8 @@ The container job:
 4. installs Trivy 0.72.0 from the official release only after checking its pinned SHA-256;
 5. rejects fixable high or critical operating-system/library vulnerabilities;
 6. starts the real Compose boundary and verifies the web container remains non-root and read-only;
-7. runs the read-only CUPS connectivity smoke check.
+7. checks security headers, mutation rejection, and the effective body limit over the real HTTP port; and
+8. runs the read-only CUPS connectivity smoke check.
 
 `--ignore-unfixed` prevents an upstream vulnerability with no available remediation from making every pull request permanently red. Such findings remain an operator/release-review concern and must not be silently added to an ignore file. A vulnerability exception requires a documented risk decision with an expiry and a linked Issue.
 
@@ -57,3 +60,5 @@ docker compose down --volumes --remove-orphans
 ```
 
 The production host should restrict the published address to localhost, the intended LAN interface, or a Tailscale/reverse-proxy boundary. Public internet exposure is outside the v1.0 threat model.
+
+When a reverse proxy terminates HTTPS, set `COOKIE_SECURE=true`, apply body and header limits no higher than the Easy Print values, and configure HSTS at that TLS boundary. Easy Print does not emit HSTS itself because the reference service also supports direct localhost HTTP. See [HTTP security](http-security.md).
