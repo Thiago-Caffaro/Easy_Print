@@ -25,7 +25,7 @@ use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
-final readonly class AllowedProcessRunner
+final readonly class AllowedProcessRunner implements ProcessRunner
 {
     /**
      * @param array<string,string> $allowedExecutables
