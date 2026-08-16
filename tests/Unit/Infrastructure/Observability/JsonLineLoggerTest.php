@@ -37,7 +37,9 @@ final class JsonLineLoggerTest extends TestCase
         $logger->info('adapter.completed', [
             'component' => 'cups',
             'connectivity' => 'available',
+            'option_count' => 8,
             'queue_count' => 2,
+            'unknown_option_count' => 1,
             'document_title' => 'private.pdf',
             'authorization' => 'Bearer private',
             'exception' => new RuntimeException('private exception message'),
@@ -54,7 +56,9 @@ final class JsonLineLoggerTest extends TestCase
         self::assertSame('0123456789abcdef0123456789abcdef', $record['correlation_id']);
         self::assertSame('cups', $record['context']['component']);
         self::assertSame('available', $record['context']['connectivity']);
+        self::assertSame(8, $record['context']['option_count']);
         self::assertSame(2, $record['context']['queue_count']);
+        self::assertSame(1, $record['context']['unknown_option_count']);
         self::assertSame('[redacted]', $record['context']['document_title']);
         self::assertSame('[redacted]', $record['context']['authorization']);
         self::assertSame(RuntimeException::class, $record['context']['exception']);

@@ -1,0 +1,12 @@
+{
+  "fixtureKind": "synthetic-contract",
+  "command": {
+    "arguments": ["lpoptions", "-h", "cups:631", "-p", "REFERENCE_QUEUE", "-l"],
+    "stdout": "PageSize/Page Size: *A4 Letter\nStaplify/Vendor Finisher: *False True\n"
+  },
+  "expected": {
+    "categories": ["media_size", "unknown"],
+    "renderableCount": 1,
+    "unknownTechnicalIdentifiers": ["Staplify"]
+  }
+}

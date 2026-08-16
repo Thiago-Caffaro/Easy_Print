@@ -49,7 +49,7 @@ final class MigratorTest extends TestCase
     {
         $migrator = new Migrator($this->connection, $this->migrations);
 
-        self::assertSame(['001_initial_metadata'], $migrator->migrate());
+        self::assertSame(['001_initial_metadata', '002_capability_snapshots'], $migrator->migrate());
         self::assertSame([], $migrator->migrate());
 
         $tables = $this
@@ -59,6 +59,7 @@ final class MigratorTest extends TestCase
         self::assertContains('print_jobs', $tables);
         self::assertContains('job_events', $tables);
         self::assertContains('operational_errors', $tables);
+        self::assertContains('capability_snapshots', $tables);
         self::assertContains('schema_migrations', $tables);
     }
 
@@ -81,6 +82,14 @@ final class MigratorTest extends TestCase
     {
         $migrator = new Migrator($this->connection, $this->migrations);
         $migrator->migrate();
+
+        self::assertSame('002_capability_snapshots', $migrator->rollbackLast());
+        self::assertFalse($this
+            ->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'capability_snapshots'")
+            ->fetchColumn());
+        self::assertNotFalse($this
+            ->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'print_jobs'")
+            ->fetchColumn());
 
         self::assertSame('001_initial_metadata', $migrator->rollbackLast());
         self::assertFalse($this

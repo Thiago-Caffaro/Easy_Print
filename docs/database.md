@@ -16,9 +16,12 @@ Migrations use paired `*.up.sql` and `*.down.sql` files. Every migration and rol
 - `print_jobs` stores queue identity, detected media metadata, selected options, the CUPS job identifier, normalized state, timestamps, and bounded safe errors.
 - `job_events` stores append-only normalized lifecycle observations when reconciliation needs a timeline.
 - `operational_errors` stores stable codes, safe bounded context, diagnostics, and retention deadlines.
+- `capability_snapshots` stores bounded, validated CUPS option metadata for the short-lived capability cache.
 - `schema_migrations` records applied versions.
 
 The schema deliberately has no document blob, recoverable upload path, user account, credential, or CUPS spool data. JSON columns are validated by SQLite, and indexes cover recent history, unfinished CUPS reconciliation, and retention cleanup.
+
+Capability snapshots are disposable operational cache entries, partitioned by the configured CUPS server key and opaque queue name. They contain option identifiers, driver labels, choices, defaults, categories, and a fingerprint, never document data. They are safe to omit from backups and are replaced after their short TTL when CUPS advertises a changed driver/capability fingerprint.
 
 ## Retention fields
 

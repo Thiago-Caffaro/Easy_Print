@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "synthetic-contract",
+  "command": {
+    "arguments": ["lpoptions", "-h", "cups:631", "-p", "REFERENCE_QUEUE", "-l"],
+    "stdout": "PageSize/Media Size: *A4 Letter\nMediaType/Media Type: *Plain Glossy\nColorModel/Color Mode: RGB *Gray\nPrintoutMode/Print Quality: Draft *Normal High\nResolution/Resolution: *300dpi 600x600dpi\norientation-requested/Orientation: *portrait landscape\nDuplex/Two-Sided: *None DuplexNoTumble DuplexTumble\nInputSlot/Media Source: *Auto Rear\nprint-scaling/Scaling: *auto fit fill none\nVendorSecret/Vendor Diagnostic: *Off On\n"
+  },
+  "expected": {
+    "categories": [
+      "media_size",
+      "media_type",
+      "color_mode",
+      "quality",
+      "resolution",
+      "orientation",
+      "sides",
+      "media_source",
+      "scaling",
+      "unknown"
+    ],
+    "renderableCount": 9,
+    "unknownTechnicalIdentifiers": ["VendorSecret"]
+  }
+}
