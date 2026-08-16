@@ -26,8 +26,10 @@ Capability snapshots are disposable operational cache entries, partitioned by th
 
 Submission keys are created transactionally with their job metadata row. Their foreign key uses cascade deletion, so history retention removes the idempotency record with the corresponding job. They are not credentials, CSRF tokens, document identifiers, or a source for reprinting.
 
+New option metadata uses the versioned JSON shape `{"version":1,"values":{"Option":"Value"}}`. The history reader also accepts the original flat shape so existing development databases remain readable. Technical CUPS identifiers are displayed only as metadata and are always HTML-escaped.
+
 ## Retention fields
 
-Every job and operational error receives a `retained_until` value when it is created. Cleanup workers are introduced with the history and hardening slices; the Foundation schema makes that policy explicit without prematurely implementing a scheduler.
+Every job and operational error receives a `retained_until` value when it is created. Bounded cleanup deletes expired print jobs and relies on foreign-key cascades to remove their idempotency keys and event timelines. Scheduling and orphaned-upload cleanup remain part of the production-hardening slice.
 
 WAL mode is not enabled by default because network-backed and container-mounted filesystems vary. It can be evaluated only with deployment-specific evidence and an architecture decision.

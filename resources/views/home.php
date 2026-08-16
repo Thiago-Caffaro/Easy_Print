@@ -27,6 +27,12 @@ declare(strict_types=1);
  * @var string                  $activeJobsUrl
  * @var string                  $activeJobsHeading
  * @var string                  $activeJobsLoading
+ * @var string                  $historyUrl
+ * @var string                  $historyLabel
+ * @var ?string                 $printerStatusUrl
+ * @var string                  $printerStatusHeading
+ * @var string                  $printerStatusLoading
+ * @var string                  $printerStatusNoSelection
  */
 ?>
 <!doctype html>
@@ -107,6 +113,30 @@ declare(strict_types=1);
                     <a href="<?= $escape($activeJobsUrl) ?>"><?= $escape($activeJobsLoading) ?></a>
                 </p>
             </section>
+
+            <?php if (null === $printerStatusUrl): ?>
+                <section class="printer-status" aria-labelledby="printer-status-heading">
+                    <h2 id="printer-status-heading"><?= $escape($printerStatusHeading) ?></h2>
+                    <p class="empty-state"><?= $escape($printerStatusNoSelection) ?></p>
+                </section>
+            <?php else: ?>
+                <section
+                    id="printer-status"
+                    class="printer-status"
+                    aria-labelledby="printer-status-heading"
+                    aria-live="polite"
+                    hx-get="<?= $escape($printerStatusUrl) ?>"
+                    hx-trigger="load"
+                    hx-swap="outerHTML"
+                >
+                    <h2 id="printer-status-heading"><?= $escape($printerStatusHeading) ?></h2>
+                    <p class="empty-state"><?= $escape($printerStatusLoading) ?></p>
+                </section>
+            <?php endif; ?>
+
+            <nav class="primary-navigation" aria-label="Easy Print">
+                <a href="<?= $escape($historyUrl) ?>"><?= $escape($historyLabel) ?></a>
+            </nav>
 
             <nav aria-label="<?= $escape($languageLabel) ?>" class="languages">
                 <a href="?lang=pt-BR" lang="pt-BR" hreflang="pt-BR"><?= $escape($portugueseLabel) ?></a>

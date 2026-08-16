@@ -91,7 +91,7 @@ final class PrintSubmissionServiceTest extends TestCase
         self::assertIsArray($row);
         self::assertSame('REFERENCE_QUEUE', $row['queue_name']);
         self::assertSame('application/pdf', $row['detected_media_type']);
-        self::assertSame('{"PageSize":"A4"}', $row['options_json']);
+        self::assertSame('{"version":1,"values":{"PageSize":"A4"}}', $row['options_json']);
         self::assertSame(456, $row['cups_job_id']);
         self::assertArrayNotHasKey('document_path', $row);
         self::assertSame(3, (int) $this->query('SELECT COUNT(*) FROM job_events')->fetchColumn());
@@ -151,6 +151,63 @@ final class PrintSubmissionServiceTest extends TestCase
         self::assertNull($result->record->cupsJobId);
         self::assertFalse(is_file($document->absolutePath));
         self::assertNull($this->query('SELECT finished_at FROM print_jobs')->fetchColumn());
+    }
+
+    public function testCupsReconciliationRecordsUnknownAndCancellationWithoutOverwritingFinalState(): void
+    {
+        $runner = new FakeProcessRunner([
+            new ProcessResult('lp', "request id is REFERENCE_QUEUE-77 (1 file(s))\n", '', 0, 1, null),
+        ]);
+        $this->service($runner)->submit($this->input($this->document('reconcile.pdf'), str_repeat('e', 32)));
+        $repository = new SqlitePrintJobRepository($this->connection);
+
+        self::assertTrue($repository->reconcile(
+            'primary',
+            'REFERENCE_QUEUE',
+            77,
+            PrintJobState::Indeterminate,
+            'cups_state_unknown',
+            '2026-08-16T12:00:00Z',
+        ));
+        self::assertTrue($repository->reconcile(
+            'primary',
+            'REFERENCE_QUEUE',
+            77,
+            PrintJobState::Cancelled,
+            null,
+            '2026-08-16T12:01:00Z',
+        ));
+        self::assertFalse($repository->reconcile(
+            'primary',
+            'REFERENCE_QUEUE',
+            77,
+            PrintJobState::Processing,
+            null,
+            '2026-08-16T12:02:00Z',
+        ));
+
+        $row = $this->query('SELECT state, finished_at, safe_error_code FROM print_jobs')->fetch(PDO::FETCH_ASSOC);
+        self::assertIsArray($row);
+        self::assertSame('cancelled', $row['state']);
+        self::assertSame('2026-08-16T12:01:00Z', $row['finished_at']);
+        self::assertSame('cups_state_unknown', $row['safe_error_code']);
+        self::assertSame(2, (int) $this->query("SELECT COUNT(*) FROM job_events WHERE source = 'cups'")->fetchColumn());
+    }
+
+    public function testRetentionCleanupDeletesOnlyExpiredMetadataAndItsDependentRecords(): void
+    {
+        $runner = new FakeProcessRunner([
+            new ProcessResult('lp', "request id is REFERENCE_QUEUE-78 (1 file(s))\n", '', 0, 1, null),
+        ]);
+        $this->service($runner)->submit($this->input($this->document('expired.pdf'), str_repeat('f', 32)));
+        $this->connection->exec("UPDATE print_jobs SET retained_until = '2026-01-01T00:00:00Z'");
+
+        $deleted = new SqlitePrintJobRepository($this->connection)->deleteExpired('2026-08-16T00:00:00Z');
+
+        self::assertSame(1, $deleted);
+        self::assertSame(0, (int) $this->query('SELECT COUNT(*) FROM print_jobs')->fetchColumn());
+        self::assertSame(0, (int) $this->query('SELECT COUNT(*) FROM print_submission_keys')->fetchColumn());
+        self::assertSame(0, (int) $this->query('SELECT COUNT(*) FROM job_events')->fetchColumn());
     }
 
     private function service(FakeProcessRunner $runner): PrintSubmissionService

@@ -5,11 +5,15 @@ declare(strict_types=1);
 use EasyPrint\Application\Health\ReadinessProbe;
 use EasyPrint\Application\Printer\ActiveJobDiscovery;
 use EasyPrint\Application\Printer\JobTitleLookup;
+use EasyPrint\Application\Printer\PrintHistoryReader;
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
+use EasyPrint\Application\Printer\QueueStatusDiscovery;
 use EasyPrint\Http\Action\ActiveJobsAction;
 use EasyPrint\Http\Action\HomeAction;
 use EasyPrint\Http\Action\LivenessAction;
+use EasyPrint\Http\Action\PrinterStatusAction;
+use EasyPrint\Http\Action\PrintHistoryAction;
 use EasyPrint\Http\Action\ReadinessAction;
 use EasyPrint\Http\Action\StaticAssetAction;
 use EasyPrint\Http\Middleware\CorrelationIdMiddleware;
@@ -23,12 +27,15 @@ use EasyPrint\Infrastructure\Configuration\ConfigurationLoader;
 use EasyPrint\Infrastructure\Cups\LpstatActiveJobDiscovery;
 use EasyPrint\Infrastructure\Cups\LpstatJobOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
+use EasyPrint\Infrastructure\Cups\LpstatPrinterStatusParser;
 use EasyPrint\Infrastructure\Cups\LpstatQueueDiscovery;
+use EasyPrint\Infrastructure\Cups\LpstatQueueStatusDiscovery;
 use EasyPrint\Infrastructure\Filesystem\RuntimeDirectories;
 use EasyPrint\Infrastructure\Health\OperationalReadinessProbe;
 use EasyPrint\Infrastructure\Observability\CorrelationContext;
 use EasyPrint\Infrastructure\Observability\JsonLineLogger;
 use EasyPrint\Infrastructure\Persistence\SqliteJobTitleLookup;
+use EasyPrint\Infrastructure\Persistence\SqlitePrintHistoryReader;
 use EasyPrint\Infrastructure\Process\AllowedProcessRunner;
 use EasyPrint\Infrastructure\Security\RuntimeSecret;
 use EasyPrint\Translation\LocaleResolver;
@@ -43,6 +50,8 @@ return static function (
     ?ReadinessProbe $readinessProbe = null,
     ?ActiveJobDiscovery $activeJobDiscovery = null,
     ?JobTitleLookup $jobTitleLookup = null,
+    ?PrintHistoryReader $printHistoryReader = null,
+    ?QueueStatusDiscovery $queueStatusDiscovery = null,
 ): Slim\App {
     $root = $projectRoot ?? dirname(__DIR__);
     $config = ConfigurationLoader::load($environment, $root);
@@ -84,6 +93,15 @@ return static function (
         $config->databasePath,
         $logger,
     );
+    $printHistoryReader ??= new SqlitePrintHistoryReader($config->databasePath, $logger);
+    $queueStatusDiscovery ??= new LpstatQueueStatusDiscovery(
+        processRunner: $processRunner,
+        parser: new LpstatPrinterStatusParser(),
+        host: $config->cupsHost,
+        port: $config->cupsPort,
+        requireEncryption: 'required' === $config->cupsEncryption,
+        logger: $logger,
+    );
     $readinessProbe ??= new OperationalReadinessProbe(
         databasePath: $config->databasePath,
         temporaryPath: $config->temporaryPath,
@@ -107,6 +125,21 @@ return static function (
         translator: $translator,
         renderer: $renderer,
     );
+    $printHistoryAction = new PrintHistoryAction(
+        config: $config,
+        history: $printHistoryReader,
+        localeResolver: $localeResolver,
+        translator: $translator,
+        renderer: $renderer,
+    );
+    $printerStatusAction = new PrinterStatusAction(
+        config: $config,
+        queues: $queueDiscovery,
+        status: $queueStatusDiscovery,
+        localeResolver: $localeResolver,
+        translator: $translator,
+        renderer: $renderer,
+    );
 
     $app = AppFactory::create();
 
@@ -116,6 +149,8 @@ return static function (
 
     $app->get('/', $homeAction);
     $app->get('/jobs/active', $activeJobsAction);
+    $app->get('/history', $printHistoryAction);
+    $app->get('/printer/status', $printerStatusAction);
     $app->get('/assets/app.css', new StaticAssetAction($root . '/public/assets/app.css', 'text/css; charset=UTF-8'));
     $app->get('/assets/htmx.min.js', new StaticAssetAction($root . '/public/assets/htmx.min.js', 'text/javascript; charset=UTF-8'));
     $app->get('/health/live', new LivenessAction());

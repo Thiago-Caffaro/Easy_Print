@@ -79,6 +79,17 @@ final readonly class HomeAction
             'activeJobsUrl' => $this->config->basePath . '/jobs/active?lang=' . rawurlencode($locale),
             'activeJobsHeading' => $t('jobs.heading'),
             'activeJobsLoading' => $t('jobs.loading'),
+            'historyUrl' => $this->config->basePath . '/history?lang=' . rawurlencode($locale),
+            'historyLabel' => $t('history.open'),
+            'printerStatusUrl' => null === $selection->queue
+                ? null
+                : $this->config->basePath . '/printer/status?' . http_build_query([
+                    'lang' => $locale,
+                    'queue' => $selection->queue->identifier,
+                ], encoding_type: PHP_QUERY_RFC3986),
+            'printerStatusHeading' => $t('printer_status.heading'),
+            'printerStatusLoading' => $t('printer_status.loading'),
+            'printerStatusNoSelection' => $t('printer_status.no_selection'),
         ]);
 
         return $this->selectionCookie->apply($response, $selection);

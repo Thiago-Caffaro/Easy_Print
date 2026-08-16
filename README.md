@@ -158,6 +158,8 @@ The actionable backlog lives in [GitHub Issues](https://github.com/Thiago-Caffar
 - [Contributing Guide](CONTRIBUTING.md) — development and pull-request workflow.
 - [Security Policy](SECURITY.md) — supported versions and private reporting.
 - [Architecture decisions](docs/decisions/) — decisions that must evolve with code.
+- [Print history](docs/print-history.md) — metadata contract, pagination, reconciliation, and retention behavior.
+- [Printer status](docs/printer-status.md) — read-only CUPS state, reason mapping, and refresh behavior.
 
 ## Contributing
 

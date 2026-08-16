@@ -7,11 +7,13 @@ namespace EasyPrint\Infrastructure\Persistence;
 use function bin2hex;
 
 use EasyPrint\Application\Printer\CupsJobSubmission;
+use EasyPrint\Application\Printer\PrintHistoryMaintenance;
 use EasyPrint\Application\Printer\PrintJobDraft;
 use EasyPrint\Application\Printer\PrintJobRecord;
 use EasyPrint\Application\Printer\PrintJobRepository;
 use EasyPrint\Application\Printer\PrintJobReservation;
 use EasyPrint\Application\Printer\PrintJobState;
+use InvalidArgumentException;
 
 use function json_encode;
 
@@ -24,7 +26,7 @@ use function random_bytes;
 use RuntimeException;
 use Throwable;
 
-final readonly class SqlitePrintJobRepository implements PrintJobRepository
+final readonly class SqlitePrintJobRepository implements PrintJobRepository, PrintHistoryMaintenance
 {
     public function __construct(private PDO $connection) {}
 
@@ -62,7 +64,10 @@ final readonly class SqlitePrintJobRepository implements PrintJobRepository
                 'byte_size' => $draft->byteSize,
                 'copies' => $draft->copies,
                 'page_range' => $draft->pageRange,
-                'options_json' => json_encode($draft->selectedOptions, JSON_THROW_ON_ERROR),
+                'options_json' => json_encode([
+                    'version' => 1,
+                    'values' => $draft->selectedOptions,
+                ], JSON_THROW_ON_ERROR),
                 'state' => PrintJobState::Prepared->value,
                 'submitted_at' => $draft->submittedAt,
                 'updated_at' => $draft->submittedAt,
@@ -190,6 +195,106 @@ final readonly class SqlitePrintJobRepository implements PrintJobRepository
         return $this->findById($printJobId);
     }
 
+    public function reconcile(
+        string $cupsServerKey,
+        string $queueName,
+        int $cupsJobId,
+        PrintJobState $state,
+        ?string $safeReasonCode,
+        string $observedAt,
+    ): bool {
+        if ($cupsJobId < 1 || !in_array($state, [
+            PrintJobState::Pending,
+            PrintJobState::Processing,
+            PrintJobState::Completed,
+            PrintJobState::Cancelled,
+            PrintJobState::Indeterminate,
+        ], true)) {
+            throw new InvalidArgumentException('The reconciled CUPS job state is invalid.');
+        }
+
+        $finishedAt = in_array($state, [PrintJobState::Completed, PrintJobState::Cancelled], true)
+            ? $observedAt
+            : null;
+        $this->connection->beginTransaction();
+
+        try {
+            $statement = $this->connection->prepare(
+                <<<'SQL'
+                    UPDATE print_jobs
+                    SET state = :state,
+                        safe_error_code = COALESCE(:safe_reason_code, safe_error_code),
+                        updated_at = :observed_at,
+                        last_reconciled_at = :observed_at,
+                        finished_at = COALESCE(:finished_at, finished_at)
+                    WHERE cups_server_key = :cups_server_key
+                      AND queue_name = :queue_name
+                      AND cups_job_id = :cups_job_id
+                      AND state NOT IN ('completed', 'cancelled', 'failed')
+                    SQL,
+            );
+            $statement->execute([
+                'state' => $state->value,
+                'safe_reason_code' => $safeReasonCode,
+                'observed_at' => $observedAt,
+                'finished_at' => $finishedAt,
+                'cups_server_key' => $cupsServerKey,
+                'queue_name' => $queueName,
+                'cups_job_id' => $cupsJobId,
+            ]);
+
+            if (1 !== $statement->rowCount()) {
+                $this->connection->commit();
+
+                return false;
+            }
+
+            $idStatement = $this->connection->prepare(
+                'SELECT id FROM print_jobs WHERE cups_server_key = :cups_server_key '
+                . 'AND queue_name = :queue_name AND cups_job_id = :cups_job_id',
+            );
+            $idStatement->execute([
+                'cups_server_key' => $cupsServerKey,
+                'queue_name' => $queueName,
+                'cups_job_id' => $cupsJobId,
+            ]);
+            $printJobId = $idStatement->fetchColumn();
+
+            if (false === $printJobId) {
+                throw new RuntimeException('The reconciled print job could not be read.');
+            }
+
+            $this->appendEvent((string) $printJobId, $state, $safeReasonCode, $observedAt, 'cups');
+            $this->connection->commit();
+
+            return true;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function deleteExpired(string $cutoff, int $limit = 250): int
+    {
+        if ($limit < 1 || $limit > 1_000) {
+            throw new InvalidArgumentException('The history cleanup limit is invalid.');
+        }
+
+        $statement = $this->connection->prepare(
+            'DELETE FROM print_jobs WHERE id IN ('
+            . 'SELECT id FROM print_jobs WHERE retained_until <= :cutoff ORDER BY retained_until ASC LIMIT :limit'
+            . ')',
+        );
+        $statement->bindValue('cutoff', $cutoff);
+        $statement->bindValue('limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->rowCount();
+    }
+
     private function findBySubmissionKey(string $submissionKey): ?PrintJobRecord
     {
         $statement = $this->connection->prepare(
@@ -246,6 +351,7 @@ final readonly class SqlitePrintJobRepository implements PrintJobRepository
         PrintJobState $state,
         ?string $reasonCode,
         string $observedAt,
+        string $source = 'application',
     ): void {
         $statement = $this->connection->prepare(
             'INSERT INTO job_events (id, print_job_id, state, safe_reason_code, source, observed_at) '
@@ -256,7 +362,7 @@ final readonly class SqlitePrintJobRepository implements PrintJobRepository
             'print_job_id' => $printJobId,
             'state' => $state->value,
             'safe_reason_code' => $reasonCode,
-            'source' => 'application',
+            'source' => $source,
             'observed_at' => $observedAt,
         ]);
     }
