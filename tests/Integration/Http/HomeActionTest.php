@@ -6,10 +6,13 @@ namespace EasyPrint\Tests\Integration\Http;
 
 use function dirname;
 
+use EasyPrint\Domain\Printer\CapabilitySnapshot;
 use EasyPrint\Domain\Printer\CupsConnectivity;
 use EasyPrint\Domain\Printer\PrinterQueue;
 use EasyPrint\Domain\Printer\PrinterState;
 use EasyPrint\Domain\Printer\QueueSnapshot;
+use EasyPrint\Infrastructure\Cups\LpoptionsOutputParser;
+use EasyPrint\Tests\Support\FakeQueueCapabilityDiscovery;
 use EasyPrint\Tests\Support\FakeQueueDiscovery;
 
 use function mkdir;
@@ -38,11 +41,16 @@ final class HomeActionTest extends TestCase
         $this->runtimeDirectory = sys_get_temp_dir() . '/easy-print-http-' . uniqid('', true);
         mkdir($this->runtimeDirectory);
         $createApplication = require $root . '/config/bootstrap.php';
-        $this->application = $createApplication([
-            'APP_ENV' => 'testing',
-            'DATABASE_PATH' => $this->runtimeDirectory . '/database/easy-print.sqlite',
-            'TEMPORARY_PATH' => $this->runtimeDirectory . '/temporary',
-        ], $root, new FakeQueueDiscovery($this->snapshot()));
+        $this->application = $createApplication(
+            environment: [
+                'APP_ENV' => 'testing',
+                'DATABASE_PATH' => $this->runtimeDirectory . '/database/easy-print.sqlite',
+                'TEMPORARY_PATH' => $this->runtimeDirectory . '/temporary',
+            ],
+            projectRoot: $root,
+            queueDiscovery: new FakeQueueDiscovery($this->snapshot()),
+            queueCapabilityDiscovery: new FakeQueueCapabilityDiscovery([$this->capabilities()]),
+        );
     }
 
     protected function tearDown(): void
@@ -77,6 +85,11 @@ final class HomeActionTest extends TestCase
         self::assertStringContainsString('Easy Print está pronto para começar', $body);
         self::assertStringContainsString('Configuração válida', $body);
         self::assertStringContainsString('REFERENCE_QUEUE', $body);
+        self::assertStringContainsString('Imprimir um documento', $body);
+        self::assertStringContainsString('name="document"', $body);
+        self::assertStringContainsString('PageSize', $body);
+        self::assertStringNotContainsString('VendorSecret', $body);
+        self::assertStringContainsString('hx-get="/print-form?lang=pt-BR"', $body);
         self::assertStringContainsString('/assets/htmx.min.js', $body);
         self::assertStringContainsString('hx-trigger="load"', $body);
         self::assertStringContainsString('/jobs/active?lang=pt-BR', $body);
@@ -145,6 +158,24 @@ final class HomeActionTest extends TestCase
         self::assertSame((string) strlen($body), $response->getHeaderLine('Content-Length'));
     }
 
+    public function testThePrintFormCanBeRefreshedForASelectedQueueWithHtmx(): void
+    {
+        $request = new ServerRequestFactory()
+            ->createServerRequest('GET', '/print-form?queue=REFERENCE_QUEUE')
+            ->withQueryParams(['queue' => 'REFERENCE_QUEUE']);
+
+        $response = $this->application->handle($request);
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('id="print-form"', $body);
+        self::assertStringContainsString('hx-target="#print-form"', $body);
+        self::assertStringContainsString('name="capability_fingerprint"', $body);
+        self::assertStringContainsString('name="submission_key"', $body);
+        self::assertStringContainsString('PageSize', $body);
+        self::assertStringNotContainsString('VendorSecret', $body);
+    }
+
     private function snapshot(): QueueSnapshot
     {
         return new QueueSnapshot(
@@ -154,6 +185,19 @@ final class HomeActionTest extends TestCase
                 new PrinterQueue('<unsafe>', PrinterState::Unknown),
             ],
             defaultQueueIdentifier: 'REFERENCE_QUEUE',
+        );
+    }
+
+    private function capabilities(): CapabilitySnapshot
+    {
+        $parser = new LpoptionsOutputParser();
+        $options = $parser->parse("PageSize/Media Size: *A4 Letter\nVendorSecret/Diagnostic: *Off On\n");
+
+        return new CapabilitySnapshot(
+            queueIdentifier: 'REFERENCE_QUEUE',
+            connectivity: CupsConnectivity::Available,
+            options: $options,
+            fingerprint: $parser->fingerprint($options),
         );
     }
 }

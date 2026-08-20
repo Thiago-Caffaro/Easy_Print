@@ -25,6 +25,16 @@ final readonly class PhpRenderer
      */
     public function render(ResponseInterface $response, string $template, array $data = []): ResponseInterface
     {
+        $response->getBody()->write($this->renderString($template, $data));
+
+        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    public function renderString(string $template, array $data = []): string
+    {
         $path = $this->templateDirectory . '/' . $template . '.php';
 
         if (!is_file($path)) {
@@ -42,8 +52,6 @@ final readonly class PhpRenderer
             throw new RuntimeException('The view template could not be rendered.');
         }
 
-        $response->getBody()->write($contents);
-
-        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+        return $contents;
     }
 }

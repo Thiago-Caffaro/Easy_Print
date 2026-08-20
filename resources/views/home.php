@@ -33,6 +33,7 @@ declare(strict_types=1);
  * @var string                  $printerStatusHeading
  * @var string                  $printerStatusLoading
  * @var string                  $printerStatusNoSelection
+ * @var string                  $printFormHtml
  */
 ?>
 <!doctype html>
@@ -98,6 +99,8 @@ declare(strict_types=1);
                     </ul>
                 <?php endif; ?>
             </section>
+
+            <?= $printFormHtml ?>
 
             <section
                 id="active-jobs"

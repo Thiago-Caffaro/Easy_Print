@@ -53,7 +53,7 @@ Stored diagnostics contain only the failure category, numeric exit status when k
 
 The private temporary document is deleted after accepted, failed, indeterminate, duplicate, and invalid-key paths. This satisfies both privacy and duplicate-safety requirements: Easy Print cannot reprint from retained bytes. A failed unlink is recorded as a bounded cleanup diagnostic without changing a confirmed CUPS acceptance into a failure.
 
-Submission keys are metadata, not authentication or CSRF tokens. The HTTP action must still require the existing CSRF control when it is introduced.
+Submission keys are metadata, not authentication or CSRF tokens. `POST /print` requires the existing CSRF control in addition to a fresh opaque submission key.
 
 ## Verification boundary
 
