@@ -7,12 +7,14 @@ use EasyPrint\Application\Printer\ActiveJobDiscovery;
 use EasyPrint\Application\Printer\JobTitleLookup;
 use EasyPrint\Application\Printer\PrintArgumentMapper;
 use EasyPrint\Application\Printer\PrintHistoryReader;
+use EasyPrint\Application\Printer\PrintJobCancellation;
 use EasyPrint\Application\Printer\PrintSubmissionService;
 use EasyPrint\Application\Printer\QueueCapabilityDiscovery;
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
 use EasyPrint\Application\Printer\QueueStatusDiscovery;
 use EasyPrint\Http\Action\ActiveJobsAction;
+use EasyPrint\Http\Action\CancelJobAction;
 use EasyPrint\Http\Action\HomeAction;
 use EasyPrint\Http\Action\LivenessAction;
 use EasyPrint\Http\Action\PrinterStatusAction;
@@ -197,6 +199,16 @@ return static function (
         translator: $translator,
         renderer: $renderer,
     );
+    $cancelJobAction = new CancelJobAction(
+        config: $config,
+        cancellation: new PrintJobCancellation(
+            config: $config,
+            jobs: $activeJobDiscovery,
+            processRunner: $processRunner,
+            logger: $logger,
+        ),
+        localeResolver: $localeResolver,
+    );
     $printHistoryAction = new PrintHistoryAction(
         config: $config,
         history: $printHistoryReader,
@@ -223,6 +235,7 @@ return static function (
     $app->get('/print-form', $printFormAction);
     $app->post('/print', $printSubmissionAction);
     $app->get('/jobs/active', $activeJobsAction);
+    $app->post('/jobs/{queue}/cancel/{job}', $cancelJobAction);
     $app->get('/history', $printHistoryAction);
     $app->get('/printer/status', $printerStatusAction);
     $app->get('/assets/app.css', new StaticAssetAction($root . '/public/assets/app.css', 'text/css; charset=UTF-8'));
