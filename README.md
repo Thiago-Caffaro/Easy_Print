@@ -162,6 +162,7 @@ The actionable backlog lives in [GitHub Issues](https://github.com/Thiago-Caffar
 - [Printer status](docs/printer-status.md) — read-only CUPS state, reason mapping, and refresh behavior.
 - [Error taxonomy](docs/error-taxonomy.md) — stable codes, localized presentation, and diagnostic boundaries.
 - [Testing strategy](docs/testing.md) — deterministic fake-CUPS coverage and physical-printer evidence rules.
+- [CUPS recovery contract](docs/cups-recovery.md) — outage, stale-state, and dependency-recovery behavior.
 
 ## Contributing
 
