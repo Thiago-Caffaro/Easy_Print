@@ -57,7 +57,7 @@ final readonly class ActiveJobsAction
                 $job->cupsJobId,
             ) ?? $t('jobs.external_title'),
             'submittedAt' => $job->submittedAtLabel,
-            'byteSize' => $this->formatBytes($job->byteSize),
+            'byteSize' => $this->formatBytes($job->byteSize, $locale),
             'stateLabel' => $t('jobs.state.' . $job->state->value),
             'cancelable' => in_array($job->state->value, ['pending', 'processing'], true),
             'cancelUrl' => $this->config->basePath . '/jobs/' . rawurlencode($job->queueIdentifier)
@@ -88,16 +88,16 @@ final readonly class ActiveJobsAction
         ]);
     }
 
-    private function formatBytes(int $bytes): string
+    private function formatBytes(int $bytes, string $locale): string
     {
         if ($bytes < 1_024) {
             return sprintf('%d B', $bytes);
         }
 
         if ($bytes < 1_048_576) {
-            return sprintf('%.1f KB', round($bytes / 1_024, 1));
+            return number_format(round($bytes / 1_024, 1), 1, 'pt-BR' === $locale ? ',' : '.', '') . ' KB';
         }
 
-        return sprintf('%.1f MB', round($bytes / 1_048_576, 1));
+        return number_format(round($bytes / 1_048_576, 1), 1, 'pt-BR' === $locale ? ',' : '.', '') . ' MB';
     }
 }
