@@ -18,6 +18,10 @@ declare(strict_types=1);
  * @var list<array{cupsJobId:string,queueIdentifier:string,title:string,submittedAt:string,byteSize:string,stateLabel:string}> $jobs
  * @var string                  $pollUrl
  * @var ?string                 $pollTrigger
+ * @var string|null             $csrfToken
+ * @var string                  $cancelLabel
+ * @var string                  $cancelConfirm
+ * @var string|null             $cancelNotice
  */
 ?>
 <section
@@ -40,6 +44,10 @@ declare(strict_types=1);
             <?= $escape($refreshLabel) ?>
         </a>
     </div>
+
+    <?php if (null !== $cancelNotice): ?>
+        <p class="empty-state" role="status"><?= $escape($cancelNotice) ?></p>
+    <?php endif; ?>
 
     <?php if (!$available): ?>
         <p class="empty-state error-state"><?= $escape($errorMessage) ?></p>
@@ -72,6 +80,14 @@ declare(strict_types=1);
                             <dd><?= $escape($job['stateLabel']) ?></dd>
                         </div>
                     </dl>
+                    <?php if ($job['cancelable'] && is_string($csrfToken)): ?>
+                        <form method="post" action="<?= $escape($job['cancelUrl']) ?>" class="job-cancel-form">
+                            <input type="hidden" name="_csrf" value="<?= $escape($csrfToken) ?>">
+                            <button type="submit" class="button button-secondary" onclick="return confirm('<?= $escape($cancelConfirm) ?>');">
+                                <?= $escape($cancelLabel) ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>

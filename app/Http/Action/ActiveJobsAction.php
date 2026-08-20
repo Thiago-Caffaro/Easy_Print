@@ -8,13 +8,18 @@ use EasyPrint\Application\Printer\ActiveJobDiscovery;
 use EasyPrint\Application\Printer\JobTitleLookup;
 use EasyPrint\Domain\Printer\ActivePrintJob;
 use EasyPrint\Domain\Printer\CupsConnectivity;
+use EasyPrint\Http\Middleware\CsrfProtectionMiddleware;
 use EasyPrint\Infrastructure\Configuration\AppConfig;
 use EasyPrint\Translation\LocaleResolver;
 use EasyPrint\Translation\Translator;
 use EasyPrint\Views\PhpRenderer;
+
+use function in_array;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+use function rawurlencode;
 use function round;
 use function sprintf;
 
@@ -34,6 +39,14 @@ final readonly class ActiveJobsAction
         $locale = $this->localeResolver->resolve($request);
         $t = fn(string $key): string => $this->translator->translate($locale, $key);
         $snapshot = $this->discovery->discover();
+        $cancelNotice = match ($request->getQueryParams()['cancel'] ?? null) {
+            'cancelled' => $t('jobs.cancelled'),
+            'not-found' => $t('jobs.cancel_not_found'),
+            'not-cancelable' => $t('jobs.cancel_not_cancelable'),
+            'unavailable' => $t('jobs.cancel_unavailable'),
+            'failed' => $t('jobs.cancel_failed'),
+            default => null,
+        };
         $url = $this->config->basePath . '/jobs/active?lang=' . rawurlencode($locale);
         $jobs = array_map(fn(ActivePrintJob $job): array => [
             'cupsJobId' => (string) $job->cupsJobId,
@@ -46,6 +59,9 @@ final readonly class ActiveJobsAction
             'submittedAt' => $job->submittedAtLabel,
             'byteSize' => $this->formatBytes($job->byteSize),
             'stateLabel' => $t('jobs.state.' . $job->state->value),
+            'cancelable' => in_array($job->state->value, ['pending', 'processing'], true),
+            'cancelUrl' => $this->config->basePath . '/jobs/' . rawurlencode($job->queueIdentifier)
+                . '/cancel/' . $job->cupsJobId . '?lang=' . rawurlencode($locale),
         ], $snapshot->jobs);
         $available = CupsConnectivity::Available === $snapshot->connectivity;
         $pollTrigger = !$available ? 'every 15s' : ([] === $jobs ? null : 'every 3s');
@@ -65,6 +81,10 @@ final readonly class ActiveJobsAction
             'jobs' => $jobs,
             'pollUrl' => $url,
             'pollTrigger' => $pollTrigger,
+            'csrfToken' => $request->getAttribute(CsrfProtectionMiddleware::TOKEN_ATTRIBUTE),
+            'cancelLabel' => $t('jobs.cancel'),
+            'cancelConfirm' => $t('jobs.cancel_confirm'),
+            'cancelNotice' => $cancelNotice,
         ]);
     }
 

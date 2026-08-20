@@ -85,6 +85,8 @@ final class ActiveJobsActionTest extends TestCase
         self::assertStringContainsString('Printing', $body);
         self::assertStringContainsString('Pending', $body);
         self::assertStringContainsString('2.0 KB', $body);
+        self::assertStringContainsString('name="_csrf"', $body);
+        self::assertStringContainsString('Cancel job', $body);
     }
 
     public function testUnavailableJobsRenderAStableErrorAndSlowerPolling(): void

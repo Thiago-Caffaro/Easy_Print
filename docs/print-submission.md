@@ -62,3 +62,11 @@ Normal tests use synthetic sanitized CUPS responses and a fake bounded runner. T
 A physical-printer test is opt-in and requires explicit operator authorization because it consumes paper or ink. Record the CUPS version, queue alias, sanitized response, observed job ID/state, and cleanup result after authorization. Do not commit private addresses, filenames, paths, usernames, or document contents.
 
 Scheduled printing and reprinting retained files are intentionally out of scope.
+
+## Cancellation
+
+`POST /jobs/{queue}/cancel/{job}` is the only job mutation exposed by the MVP. The route is protected by the same CSRF middleware as submission and accepts only a queue identifier plus a positive numeric CUPS job ID from the URL; no browser-provided command arguments are trusted.
+
+Before invoking the allowlisted `cancel` executable, Easy Print discovers the current active-job snapshot and requires the exact queue/job pair to be present in a `pending` or `processing` state. Unknown, stale, completed, or malformed identifiers are rejected without calling CUPS. The adapter passes separated arguments (`[-E] -h <server> <queue>-<job>`) through the bounded process runner.
+
+Cancellation is successful only after a second active-job discovery confirms that the target no longer appears. A timeout, CUPS outage, or still-active target is reported conservatively and never retried automatically. The UI renders the cancel control only for eligible active jobs and presents stable localized messages without exposing command output, paths, or private diagnostics.

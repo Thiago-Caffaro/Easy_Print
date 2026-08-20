@@ -81,4 +81,6 @@ Changing the queue is progressively enhanced with HTMX through `GET /print-form`
 
 `POST /print` is CSRF-protected. It rechecks the submitted queue against current CUPS discovery, validates the capability fingerprint and selected values, validates and privately stages the upload, then calls the existing CUPS submission use case. The response contains only a safe outcome and optional CUPS job identifier; private document bytes are deleted after the submission attempt.
 
+Active jobs are rendered at `/jobs/active`. Eligible pending and processing jobs expose a CSRF-protected `POST /jobs/{queue}/cancel/{job}` control. Cancellation is verified against a fresh CUPS snapshot before the command and reconciled with a second snapshot afterward; outages and stale jobs produce conservative localized feedback instead of unsafe retries.
+
 Every future `POST`, `PUT`, `PATCH`, or `DELETE` route is protected automatically. Server-rendered forms must use the `easy_print.csrf_token` request attribute in a hidden `_csrf` field. HTMX requests may send the same value in `X-CSRF-Token`. Do not exempt mutation routes; a read-only health endpoint must use `GET` or `HEAD`.
