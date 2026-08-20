@@ -160,6 +160,8 @@ The actionable backlog lives in [GitHub Issues](https://github.com/Thiago-Caffar
 - [Architecture decisions](docs/decisions/) — decisions that must evolve with code.
 - [Print history](docs/print-history.md) — metadata contract, pagination, reconciliation, and retention behavior.
 - [Printer status](docs/printer-status.md) — read-only CUPS state, reason mapping, and refresh behavior.
+- [Error taxonomy](docs/error-taxonomy.md) — stable codes, localized presentation, and diagnostic boundaries.
+- [Testing strategy](docs/testing.md) — deterministic fake-CUPS coverage and physical-printer evidence rules.
 
 ## Contributing
 
