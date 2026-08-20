@@ -81,6 +81,8 @@ The initial route is server-rendered and can be checked in both supported locale
 
 The explicit `lang` query parameter is the first locale-selection strategy. Invalid or disabled locale values fall back to the configured default. Account-based preferences are outside v1.0.
 
+Both supported catalogs are key-checked at startup and in the test suite. User-visible dates use `IntlDateFormatter`, while file sizes use the locale's decimal separator (`2.0 KB` in English and `2,0 KB` in Portuguese). The language links remain available without login on every primary page.
+
 ## Print page
 
 `/` renders a conventional multipart print form without requiring a JavaScript framework. It offers PDF, PNG, and JPEG uploads, copies, an optional CUPS page range, and only the normalized capability controls currently advertised by the selected queue.

@@ -53,7 +53,7 @@ final readonly class PrintHistoryAction
             'queue' => $entry->queueName,
             'jobId' => null === $entry->cupsJobId ? $t('history.not_assigned') : (string) $entry->cupsJobId,
             'type' => $t('history.type.' . $entry->mediaType),
-            'size' => $this->formatBytes($entry->byteSize),
+            'size' => $this->formatBytes($entry->byteSize, $locale),
             'copies' => (string) $entry->copies,
             'pages' => $entry->pageRange ?? $t('history.all_pages'),
             'options' => $this->formatOptions($entry->selectedOptions, $t('history.default_options')),
@@ -130,16 +130,16 @@ final readonly class PrintHistoryAction
         return implode(', ', $formatted);
     }
 
-    private function formatBytes(int $bytes): string
+    private function formatBytes(int $bytes, string $locale): string
     {
         if ($bytes < 1_024) {
             return sprintf('%d B', $bytes);
         }
 
         if ($bytes < 1_048_576) {
-            return sprintf('%.1f KB', round($bytes / 1_024, 1));
+            return number_format(round($bytes / 1_024, 1), 1, 'pt-BR' === $locale ? ',' : '.', '') . ' KB';
         }
 
-        return sprintf('%.1f MB', round($bytes / 1_048_576, 1));
+        return number_format(round($bytes / 1_048_576, 1), 1, 'pt-BR' === $locale ? ',' : '.', '') . ' MB';
     }
 }

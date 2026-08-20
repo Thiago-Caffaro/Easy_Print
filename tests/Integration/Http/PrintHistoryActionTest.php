@@ -84,6 +84,11 @@ final class PrintHistoryActionTest extends TestCase
         self::assertStringContainsString('Completed', $body);
         self::assertDoesNotMatchRegularExpression('/<a[^>]+download/i', $body);
         self::assertStringNotContainsString('>Reprint<', $body);
+
+        $localizedRequest = new ServerRequestFactory()->createServerRequest('GET', '/history?lang=pt-BR')
+            ->withQueryParams(['lang' => 'pt-BR']);
+        $localizedBody = (string) $application->handle($localizedRequest)->getBody();
+        self::assertStringContainsString('2,0 KB', $localizedBody);
     }
 
     public function testItRendersUnavailableAndEmptyStates(): void
