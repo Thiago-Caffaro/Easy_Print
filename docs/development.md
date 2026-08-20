@@ -73,4 +73,12 @@ The initial route is server-rendered and can be checked in both supported locale
 
 The explicit `lang` query parameter is the first locale-selection strategy. Invalid or disabled locale values fall back to the configured default. Account-based preferences are outside v1.0.
 
+## Print page
+
+`/` renders a conventional multipart print form without requiring a JavaScript framework. It offers PDF, PNG, and JPEG uploads, copies, an optional CUPS page range, and only the normalized capability controls currently advertised by the selected queue.
+
+Changing the queue is progressively enhanced with HTMX through `GET /print-form`; the response replaces only the form controls and refreshes the capability fingerprint. Without JavaScript, the queue links on the page remain available for selecting a queue before submitting.
+
+`POST /print` is CSRF-protected. It rechecks the submitted queue against current CUPS discovery, validates the capability fingerprint and selected values, validates and privately stages the upload, then calls the existing CUPS submission use case. The response contains only a safe outcome and optional CUPS job identifier; private document bytes are deleted after the submission attempt.
+
 Every future `POST`, `PUT`, `PATCH`, or `DELETE` route is protected automatically. Server-rendered forms must use the `easy_print.csrf_token` request attribute in a hidden `_csrf` field. HTMX requests may send the same value in `X-CSRF-Token`. Do not exempt mutation routes; a read-only health endpoint must use `GET` or `HEAD`.

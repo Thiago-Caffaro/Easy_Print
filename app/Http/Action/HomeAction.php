@@ -7,6 +7,7 @@ namespace EasyPrint\Http\Action;
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
 use EasyPrint\Domain\Printer\PrinterQueue;
+use EasyPrint\Http\PrintFormDataFactory;
 use EasyPrint\Http\QueueSelectionCookie;
 use EasyPrint\Infrastructure\Configuration\AppConfig;
 use EasyPrint\Translation\LocaleResolver;
@@ -28,6 +29,7 @@ final readonly class HomeAction
         private QueueDiscovery $queueDiscovery,
         private QueueSelectionResolver $selectionResolver,
         private QueueSelectionCookie $selectionCookie,
+        private PrintFormDataFactory $printFormFactory,
         private LocaleResolver $localeResolver,
         private Translator $translator,
         private PhpRenderer $renderer,
@@ -90,6 +92,10 @@ final readonly class HomeAction
             'printerStatusHeading' => $t('printer_status.heading'),
             'printerStatusLoading' => $t('printer_status.loading'),
             'printerStatusNoSelection' => $t('printer_status.no_selection'),
+            'printFormHtml' => $this->renderer->renderString(
+                'print-form',
+                $this->printFormFactory->create($request)['data'],
+            ),
         ]);
 
         return $this->selectionCookie->apply($response, $selection);

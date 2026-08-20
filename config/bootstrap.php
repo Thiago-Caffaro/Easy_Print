@@ -5,7 +5,10 @@ declare(strict_types=1);
 use EasyPrint\Application\Health\ReadinessProbe;
 use EasyPrint\Application\Printer\ActiveJobDiscovery;
 use EasyPrint\Application\Printer\JobTitleLookup;
+use EasyPrint\Application\Printer\PrintArgumentMapper;
 use EasyPrint\Application\Printer\PrintHistoryReader;
+use EasyPrint\Application\Printer\PrintSubmissionService;
+use EasyPrint\Application\Printer\QueueCapabilityDiscovery;
 use EasyPrint\Application\Printer\QueueDiscovery;
 use EasyPrint\Application\Printer\QueueSelectionResolver;
 use EasyPrint\Application\Printer\QueueStatusDiscovery;
@@ -13,7 +16,9 @@ use EasyPrint\Http\Action\ActiveJobsAction;
 use EasyPrint\Http\Action\HomeAction;
 use EasyPrint\Http\Action\LivenessAction;
 use EasyPrint\Http\Action\PrinterStatusAction;
+use EasyPrint\Http\Action\PrintFormAction;
 use EasyPrint\Http\Action\PrintHistoryAction;
+use EasyPrint\Http\Action\PrintSubmissionAction;
 use EasyPrint\Http\Action\ReadinessAction;
 use EasyPrint\Http\Action\StaticAssetAction;
 use EasyPrint\Http\Middleware\CorrelationIdMiddleware;
@@ -21,23 +26,34 @@ use EasyPrint\Http\Middleware\CsrfProtectionMiddleware;
 use EasyPrint\Http\Middleware\ExceptionLoggingMiddleware;
 use EasyPrint\Http\Middleware\RequestLimitsMiddleware;
 use EasyPrint\Http\Middleware\SecurityHeadersMiddleware;
+use EasyPrint\Http\PrintFormDataFactory;
 use EasyPrint\Http\QueueSelectionCookie;
 use EasyPrint\Http\Security\CsrfTokenManager;
 use EasyPrint\Infrastructure\Configuration\ConfigurationLoader;
+use EasyPrint\Infrastructure\Cups\LpoptionsCapabilityDiscovery;
+use EasyPrint\Infrastructure\Cups\LpoptionsOutputParser;
+use EasyPrint\Infrastructure\Cups\LpPrintJobSubmitter;
 use EasyPrint\Infrastructure\Cups\LpstatActiveJobDiscovery;
 use EasyPrint\Infrastructure\Cups\LpstatJobOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatOutputParser;
 use EasyPrint\Infrastructure\Cups\LpstatPrinterStatusParser;
 use EasyPrint\Infrastructure\Cups\LpstatQueueDiscovery;
 use EasyPrint\Infrastructure\Cups\LpstatQueueStatusDiscovery;
+use EasyPrint\Infrastructure\Cups\LpSubmissionOutputParser;
 use EasyPrint\Infrastructure\Filesystem\RuntimeDirectories;
 use EasyPrint\Infrastructure\Health\OperationalReadinessProbe;
 use EasyPrint\Infrastructure\Observability\CorrelationContext;
 use EasyPrint\Infrastructure\Observability\JsonLineLogger;
+use EasyPrint\Infrastructure\Persistence\SqliteConnectionFactory;
 use EasyPrint\Infrastructure\Persistence\SqliteJobTitleLookup;
 use EasyPrint\Infrastructure\Persistence\SqlitePrintHistoryReader;
+use EasyPrint\Infrastructure\Persistence\SqlitePrintJobRepository;
 use EasyPrint\Infrastructure\Process\AllowedProcessRunner;
 use EasyPrint\Infrastructure\Security\RuntimeSecret;
+use EasyPrint\Infrastructure\Upload\ImageFileInspector;
+use EasyPrint\Infrastructure\Upload\PdfStructureInspector;
+use EasyPrint\Infrastructure\Upload\SecureImageUpload;
+use EasyPrint\Infrastructure\Upload\SecurePdfUpload;
 use EasyPrint\Translation\LocaleResolver;
 use EasyPrint\Translation\Translator;
 use EasyPrint\Views\PhpRenderer;
@@ -52,6 +68,7 @@ return static function (
     ?JobTitleLookup $jobTitleLookup = null,
     ?PrintHistoryReader $printHistoryReader = null,
     ?QueueStatusDiscovery $queueStatusDiscovery = null,
+    ?QueueCapabilityDiscovery $queueCapabilityDiscovery = null,
 ): Slim\App {
     $root = $projectRoot ?? dirname(__DIR__);
     $config = ConfigurationLoader::load($environment, $root);
@@ -102,17 +119,72 @@ return static function (
         requireEncryption: 'required' === $config->cupsEncryption,
         logger: $logger,
     );
+    $queueCapabilityDiscovery ??= new LpoptionsCapabilityDiscovery(
+        processRunner: $processRunner,
+        parser: new LpoptionsOutputParser(),
+        host: $config->cupsHost,
+        port: $config->cupsPort,
+        requireEncryption: 'required' === $config->cupsEncryption,
+        logger: $logger,
+    );
     $readinessProbe ??= new OperationalReadinessProbe(
         databasePath: $config->databasePath,
         temporaryPath: $config->temporaryPath,
         queueDiscovery: $queueDiscovery,
         logger: $logger,
     );
+    $selectionCookie = new QueueSelectionCookie($config->basePath, $config->cookieSecure);
+    $printFormFactory = new PrintFormDataFactory(
+        config: $config,
+        queues: $queueDiscovery,
+        capabilities: $queueCapabilityDiscovery,
+        selectionResolver: new QueueSelectionResolver(),
+        selectionCookie: $selectionCookie,
+        localeResolver: $localeResolver,
+        translator: $translator,
+    );
     $homeAction = new HomeAction(
         config: $config,
         queueDiscovery: $queueDiscovery,
         selectionResolver: new QueueSelectionResolver(),
-        selectionCookie: new QueueSelectionCookie($config->basePath, $config->cookieSecure),
+        selectionCookie: $selectionCookie,
+        printFormFactory: $printFormFactory,
+        localeResolver: $localeResolver,
+        translator: $translator,
+        renderer: $renderer,
+    );
+    $printFormAction = new PrintFormAction($printFormFactory, $selectionCookie, $renderer);
+    $printSubmissionAction = new PrintSubmissionAction(
+        config: $config,
+        queues: $queueDiscovery,
+        capabilities: $queueCapabilityDiscovery,
+        arguments: new PrintArgumentMapper(),
+        pdfUpload: new SecurePdfUpload(
+            storageDirectory: $config->temporaryPath,
+            publicDirectory: $root . '/public',
+            maximumBytes: $config->uploadMaxBytes,
+            structureInspector: new PdfStructureInspector(),
+        ),
+        imageUpload: new SecureImageUpload(
+            storageDirectory: $config->temporaryPath,
+            publicDirectory: $root . '/public',
+            maximumBytes: $config->uploadMaxBytes,
+            maximumWidth: $config->imageMaxWidth,
+            maximumHeight: $config->imageMaxHeight,
+            maximumPixels: $config->imageMaxPixels,
+            inspector: new ImageFileInspector(),
+        ),
+        submissionFactory: static fn(): PrintSubmissionService => new PrintSubmissionService(
+            repository: new SqlitePrintJobRepository(SqliteConnectionFactory::create($config->databasePath)),
+            submitter: new LpPrintJobSubmitter(
+                processRunner: $processRunner,
+                parser: new LpSubmissionOutputParser(),
+                host: $config->cupsHost,
+                port: $config->cupsPort,
+                requireEncryption: 'required' === $config->cupsEncryption,
+            ),
+            historyRetentionDays: $config->historyRetentionDays,
+        ),
         localeResolver: $localeResolver,
         translator: $translator,
         renderer: $renderer,
@@ -148,6 +220,8 @@ return static function (
     }
 
     $app->get('/', $homeAction);
+    $app->get('/print-form', $printFormAction);
+    $app->post('/print', $printSubmissionAction);
     $app->get('/jobs/active', $activeJobsAction);
     $app->get('/history', $printHistoryAction);
     $app->get('/printer/status', $printerStatusAction);
