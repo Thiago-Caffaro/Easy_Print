@@ -62,6 +62,14 @@ php bin/check-cups.php
 
 It uses the configured CUPS host and exits non-zero for unavailable, unauthorized, timed-out, or malformed responses. See [CUPS queue discovery](cups-discovery.md) for its result contract and Docker invocation.
 
+The private upload directory can be cleaned from a scheduler without contacting CUPS:
+
+```bash
+php bin/cleanup-uploads.php
+```
+
+The command deletes only files with Easy Print's random 32-hex filename and supported document extension when their modification time exceeds `TEMP_FILE_TTL_SECONDS`. It resolves the configured directory, rejects symlinks and path escapes, reports bounded counters, and exits non-zero if a deletion fails. Run it from cron, a system timer, or an equivalent container scheduler.
+
 ## Composition root
 
 `config/bootstrap.php` creates the Slim application explicitly. There is no dependency container or service locator. Add a dependency only when a working vertical slice uses it and pass it through a constructor.
