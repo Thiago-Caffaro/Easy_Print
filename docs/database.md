@@ -33,3 +33,5 @@ New option metadata uses the versioned JSON shape `{"version":1,"values":{"Optio
 Every job and operational error receives a `retained_until` value when it is created. Bounded cleanup deletes expired print jobs and relies on foreign-key cascades to remove their idempotency keys and event timelines. Scheduling and orphaned-upload cleanup remain part of the production-hardening slice.
 
 WAL mode is not enabled by default because network-backed and container-mounted filesystems vary. It can be evaluated only with deployment-specific evidence and an architecture decision.
+
+See [SQLite backup and recovery](database-recovery.md) for quiescent Docker backup commands, migration failure handling, restore verification, retention boundaries, and TrueNAS SCALE dataset guidance.
