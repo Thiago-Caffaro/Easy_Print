@@ -91,6 +91,23 @@ final class LpoptionsOutputParserTest extends TestCase
         self::assertContains('LCPP_NORMAL', array_column($options[0]->choices, 'technicalIdentifier'));
     }
 
+    public function testItParsesTheEpsonL4150CapabilityResponse(): void
+    {
+        $options = new LpoptionsOutputParser()->parse(<<<'OUTPUT'
+            MediaType/Print Quality: PLAIN_HIGH *PLAIN_NORMAL PMMATT_HIGH PMMATT_NORMAL PLATINA_HIGH PLATINA_NORMAL PMPHOTO_HIGH PMPHOTO_NORMAL PMPHOTO_DRAFT PSGLOS_HIGH PSGLOS_NORMAL PSGLOS_DRAFT LCPP_HIGH LCPP_NORMAL LCPP_DRAFT ENV_HIGH ENV_NORMAL
+            Ink/Grayscale: *COLOR MONO
+            PageSize/Media Size: A4 *TA4 4X6FULL T4X6FULL 2L T2L A6 A5 B5 B6 L TL INDEX5 8x10 T8x10 4X7 T4X7 Postcard TPostcard ENV10 EnvDL ENVC6 Letter TLetter Legal 16K
+            Brightness/Brightness: -25 -24 -23 -22 -21 -20 -19 -18 -17 -16 -15 -14 -13 -12 -11 -10 -9 -8 -7 -6 -5 -4 -3 -2 -1 *0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+            Contrast/Contrast: -25 -24 -23 -22 -21 -20 -19 -18 -17 -16 -15 -14 -13 -12 -11 -10 -9 -8 -7 -6 -5 -4 -3 -2 -1 *0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+            OUTPUT);
+
+        self::assertCount(5, $options);
+        self::assertSame(17, count($options[0]->choices));
+        self::assertSame(51, count($options[3]->choices));
+        self::assertSame('-25', $options[3]->choices[0]->technicalIdentifier);
+        self::assertSame('0', $options[3]->defaultTechnicalIdentifier);
+    }
+
     public function testTheFingerprintChangesWithDriverAdvertisedData(): void
     {
         $parser = new LpoptionsOutputParser();
