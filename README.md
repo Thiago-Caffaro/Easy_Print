@@ -108,6 +108,90 @@ The readiness response must report `"status":"ok"`. If CUPS is unavailable or no
 docker compose logs --follow cups
 ```
 
+### TrueNAS SCALE with an existing CUPS container
+
+If CUPS is already running separately (for example, with `network_mode: host`, USB access, Avahi, and the Epson driver), deploy only the Easy Print web container. Easy Print does not need the USB device, the CUPS configuration volume, or the CUPS spool; it consumes the queue through port 631.
+
+The copy-and-paste example is available at [`deploy/truenas-existing-cups.yaml`](deploy/truenas-existing-cups.yaml) and is reproduced below for the TrueNAS **Install via YAML** screen:
+
+```yaml
+services:
+  easy-print:
+    image: docker.io/thiagocaffaro/easy-print:0.1.1
+    container_name: easy-print
+
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_LOCALE: pt-BR
+      APP_ENABLED_LOCALES: pt-BR,en
+      CUPS_HOST: 192.168.1.20
+      CUPS_PORT: "631"
+      CUPS_ENCRYPTION: never
+      CUPS_SERVER_KEY: truenas-cups
+      DATABASE_PATH: /var/lib/easy-print/easy-print.sqlite
+      TEMPORARY_PATH: /var/lib/easy-print/tmp
+      COOKIE_SECURE: "false"
+      LOG_LEVEL: info
+      HISTORY_RETENTION_DAYS: "90"
+      ERROR_RETENTION_DAYS: "30"
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    volumes:
+      - /mnt/POOL/Apps/easy_print/data:/var/lib/easy-print
+
+    tmpfs:
+      - /var/lib/easy-print/tmp:uid=10001,gid=10001,mode=0770
+      - /tmp:uid=10001,gid=10001,mode=1770
+
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    restart: unless-stopped
+```
+
+Before deploying, replace `192.168.1.20` with the TrueNAS address reachable from the container and replace `/mnt/POOL/Apps/easy_print/data` with an existing dataset path. The fixed `0.1.1` tag avoids accidentally reusing a cached `latest` image; update the tag deliberately when upgrading.
+
+Prepare the dataset from the TrueNAS Shell (as root):
+
+```sh
+mkdir -p /mnt/POOL/Apps/easy_print/data
+chown -R 10001:10001 /mnt/POOL/Apps/easy_print/data
+chmod -R 750 /mnt/POOL/Apps/easy_print/data
+```
+
+The parent directories must allow UID `10001` to traverse them. If the dataset uses ACLs, grant that UID traverse permission on the parents and read/write/execute permission on `data`. Do not change the container to run as `apps`; the image and its temporary filesystem are designed for UID `10001`.
+
+After deployment, check the container and the CUPS boundary:
+
+```sh
+sudo docker ps -a
+sudo docker logs --tail 80 easy-print
+sudo docker exec easy-print lpstat -h 192.168.1.20:631 -p -d
+sudo docker exec easy-print lpoptions -h 192.168.1.20:631 -p EPSON_L4150_Series -l
+```
+
+The last command must list the options advertised by the selected driver. Easy Print renders those capabilities dynamically, including all media types, paper sizes, color modes, quality settings, and any other options the queue exposes. It does not hardcode Epson features. Some drivers expose technical choice identifiers (for example, `PMPHOTO_HIGH`) rather than localized labels; the selected identifier is passed to CUPS unchanged.
+
+#### TrueNAS installation troubleshooting
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `DATABASE_PATH is not writable` | The bind-mounted dataset is owned by another UID or a parent directory cannot be traversed | Set ownership to `10001:10001`, mode `750`, and grant parent traverse permission |
+| `TEMPORARY_PATH is not writable` | `tmpfs` was declared without `uid`, `gid`, and `mode` options | Use the two `tmpfs` declarations shown above, then redeploy |
+| Container restarts with exit 255 | The startup migration fails repeatedly, usually because one of the runtime directories is not writable | Inspect `docker logs`, correct the dataset/tmpfs permissions, and recreate the app |
+| Queue is missing | `CUPS_HOST` is wrong, port 631 is blocked, or CUPS is not sharing the queue | Test `lpstat` from the Easy Print container and confirm the queue in CUPS |
+| Queue is visible but controls are unavailable | `lpoptions` cannot reach the PPD, or an old image rejected valid driver choices | Test `lpoptions` directly and use image tag `0.1.1` or newer |
+| Localhost URL is unreachable from another device | `127.0.0.1:8080` intentionally binds only to TrueNAS | Use Tailscale Serve/reverse proxy, or bind a LAN address only behind an appropriate firewall |
+| `latest` did not change after an update | Docker/TrueNAS reused a cached tag | Use a fixed version tag, redeploy, or explicitly pull the new image |
+
+The CUPS administrator password is not required by Easy Print for normal client operations. Keep it out of YAML files, screenshots, commits, and support logs. The current image targets Linux AMD64; ARM64 is not supported yet.
+
 ### Stop and reset the local stack
 
 Stop the containers while preserving SQLite metadata and CUPS configuration:

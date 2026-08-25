@@ -1,0 +1,45 @@
+services:
+  easy-print:
+    image: docker.io/thiagocaffaro/easy-print:0.1.1
+    container_name: easy-print
+
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_LOCALE: pt-BR
+      APP_ENABLED_LOCALES: pt-BR,en
+
+      # Use the TrueNAS LAN/Tailscale address reachable from this container.
+      # Do not use 127.0.0.1 when CUPS is a separate host-network container.
+      CUPS_HOST: 192.168.1.20
+      CUPS_PORT: "631"
+      CUPS_ENCRYPTION: never
+      CUPS_SERVER_KEY: truenas-cups
+
+      DATABASE_PATH: /var/lib/easy-print/easy-print.sqlite
+      TEMPORARY_PATH: /var/lib/easy-print/tmp
+      COOKIE_SECURE: "false"
+      LOG_LEVEL: info
+      HISTORY_RETENTION_DAYS: "90"
+      ERROR_RETENTION_DAYS: "30"
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    # Replace POOL with the name of an existing TrueNAS dataset.
+    volumes:
+      - /mnt/POOL/Apps/easy_print/data:/var/lib/easy-print
+
+    # The image runs as UID/GID 10001. These options are required so the
+    # application can create temporary uploads during startup and printing.
+    tmpfs:
+      - /var/lib/easy-print/tmp:uid=10001,gid=10001,mode=0770
+      - /tmp:uid=10001,gid=10001,mode=1770
+
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    restart: unless-stopped
