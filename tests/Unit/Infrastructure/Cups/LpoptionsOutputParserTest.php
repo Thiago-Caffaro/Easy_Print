@@ -61,6 +61,36 @@ final class LpoptionsOutputParserTest extends TestCase
         self::assertSame('Vendor Finisher', $options[1]->driverLabel);
     }
 
+    public function testItAcceptsSignedNumericDriverChoices(): void
+    {
+        $options = new LpoptionsOutputParser()->parse(
+            'Brightness/Brightness: -25 *0 25' . "\n" .
+            'Contrast/Contrast: -25 *0 25',
+        );
+
+        self::assertSame(['-25', '0', '25'], array_column($options[0]->choices, 'technicalIdentifier'));
+        self::assertSame('0', $options[0]->defaultTechnicalIdentifier);
+        self::assertSame(['-25', '0', '25'], array_column($options[1]->choices, 'technicalIdentifier'));
+    }
+
+    public function testItPreservesAllAdvertisedMediaTypeChoices(): void
+    {
+        $options = new LpoptionsOutputParser()->parse(
+            'MediaType/Print Quality: PLAIN_HIGH *PLAIN_NORMAL PMMATT_HIGH PMMATT_NORMAL '
+            . 'PLATINA_HIGH PLATINA_NORMAL PMPHOTO_HIGH PMPHOTO_NORMAL PMPHOTO_DRAFT '
+            . 'PSGLOS_HIGH PSGLOS_NORMAL PSGLOS_DRAFT LCPP_HIGH LCPP_NORMAL LCPP_DRAFT '
+            . 'ENV_HIGH ENV_NORMAL',
+        );
+
+        self::assertCount(1, $options);
+        self::assertSame(CapabilityCategory::MediaType, $options[0]->category);
+        self::assertCount(17, $options[0]->choices);
+        self::assertSame('PLAIN_NORMAL', $options[0]->defaultTechnicalIdentifier);
+        self::assertContains('PMPHOTO_HIGH', array_column($options[0]->choices, 'technicalIdentifier'));
+        self::assertContains('PSGLOS_DRAFT', array_column($options[0]->choices, 'technicalIdentifier'));
+        self::assertContains('LCPP_NORMAL', array_column($options[0]->choices, 'technicalIdentifier'));
+    }
+
     public function testTheFingerprintChangesWithDriverAdvertisedData(): void
     {
         $parser = new LpoptionsOutputParser();

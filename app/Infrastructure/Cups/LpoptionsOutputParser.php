@@ -82,7 +82,9 @@ final class LpoptionsOutputParser
                 $isDefault = str_starts_with($token, '*');
                 $identifier = $isDefault ? substr($token, 1) : $token;
 
-                if (1 !== preg_match('/^[A-Za-z0-9][A-Za-z0-9_.:+\/-]{0,127}$/D', $identifier)
+                // CUPS drivers may expose signed numeric values (for example,
+                // Brightness and Contrast commonly advertise -25..25).
+                if (1 !== preg_match('/^-?[A-Za-z0-9][A-Za-z0-9_.:+\/-]{0,127}$/D', $identifier)
                     || isset($choiceIdentifiers[$identifier])) {
                     throw new MalformedLpoptionsOutput('The lpoptions output contains an invalid or duplicate choice.');
                 }
