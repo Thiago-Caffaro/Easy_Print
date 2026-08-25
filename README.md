@@ -65,12 +65,66 @@ The product is intentionally small:
 
 The current development branches provide the executable Slim foundation, validated environment configuration, Portuguese and English catalogs, transactional SQLite metadata, a bounded allowlisted process runner, the separate web/CUPS Docker Compose topology, dynamic queue capabilities, validated print arguments, and the CUPS submission application boundary.
 
+## Quick Start
+
+Run Easy Print locally with Docker Compose on a Linux AMD64 host.
+
+### Prerequisites
+
+- Docker Engine with the Docker Compose plugin;
+- access to the host network, USB device, or IPP endpoint used by the CUPS container;
+- a printer configured in CUPS before submitting a document.
+
+### Start the reference stack
+
+From the repository root:
+
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up --detach --build
 ```
 
-The web interface binds to `127.0.0.1:8080` and CUPS binds to `127.0.0.1:631` by default. Change bind addresses only when the host firewall, LAN, Tailscale, or reverse proxy is intentionally providing the access boundary.
+The first build downloads the PHP, CUPS, and printer-support dependencies and can take a few minutes. The default local bindings are:
+
+| Service | Address |
+| --- | --- |
+| Easy Print web interface | <http://127.0.0.1:8080> |
+| CUPS administration | <http://127.0.0.1:631> |
+
+Open the Easy Print address after the containers report healthy. The application discovers queues from the CUPS service; it does not create or configure printers automatically.
+
+### Verify the installation
+
+```bash
+docker compose ps
+curl --fail http://127.0.0.1:8080/health/live
+curl --fail http://127.0.0.1:8080/health/ready
+docker compose exec web php /app/bin/check-cups.php
+```
+
+The readiness response must report `"status":"ok"`. If CUPS is unavailable or no queue is configured, inspect the CUPS container and configure the printer before testing a submission:
+
+```bash
+docker compose logs --follow cups
+```
+
+### Stop and reset the local stack
+
+Stop the containers while preserving SQLite metadata and CUPS configuration:
+
+```bash
+docker compose down
+```
+
+To remove the local volumes and all stored metadata/configuration, use the destructive reset only when you intend to start over:
+
+```bash
+docker compose down --volumes
+```
+
+For environment variables, PHP development, migrations, backups, and production/private-network deployment, continue with [Development](docs/development.md), [Configuration](docs/configuration.md), and [SQLite backup and recovery](docs/database-recovery.md).
+
+Change the default bind addresses only when the host firewall, LAN, Tailscale, or reverse proxy is intentionally providing the access boundary.
 
 For local PHP development and all quality commands, see [Development](docs/development.md). Runtime variables are documented in [Configuration](docs/configuration.md), migrations and retention fields are covered in [Database](docs/database.md), and runtime contracts are described in [CUPS queue discovery](docs/cups-discovery.md), [CUPS queue capabilities](docs/cups-capabilities.md), [Queue selection and state](docs/queue-selection.md), [Print argument validation](docs/print-argument-validation.md), [Print job submission](docs/print-submission.md), [Active print jobs](docs/active-jobs.md), [Secure PDF uploads](docs/pdf-uploads.md), [Secure image uploads](docs/image-uploads.md), [HTTP security](docs/http-security.md), [Observability and health](docs/observability.md), [Private network deployment](docs/network-deployment.md), and [Web container security](docs/container-security.md).
 
