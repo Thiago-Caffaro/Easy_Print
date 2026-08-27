@@ -1,6 +1,6 @@
 services:
   easy-print:
-    image: docker.io/thiagocaffaro/easy-print:0.1.1
+    image: docker.io/thiagocaffaro/easy-print:0.2.0
     container_name: easy-print
 
     environment:

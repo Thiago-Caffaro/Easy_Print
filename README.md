@@ -117,7 +117,7 @@ The copy-and-paste example is available at [`deploy/truenas-existing-cups.yaml`]
 ```yaml
 services:
   easy-print:
-    image: docker.io/thiagocaffaro/easy-print:0.1.1
+    image: docker.io/thiagocaffaro/easy-print:0.2.0
     container_name: easy-print
 
     environment:
@@ -155,7 +155,7 @@ services:
     restart: unless-stopped
 ```
 
-Before deploying, replace `192.168.1.20` with the TrueNAS address reachable from the container and replace `/mnt/POOL/Apps/easy_print/data` with an existing dataset path. The fixed version tag avoids accidentally reusing a cached `latest` image; update the tag deliberately when upgrading. Use `0.2.0` or newer once that release is published.
+Before deploying, replace `192.168.1.20` with the TrueNAS address reachable from the container and replace `/mnt/POOL/Apps/easy_print/data` with an existing dataset path. The fixed `0.2.0` tag avoids accidentally reusing a cached `latest` image; update the tag deliberately when upgrading.
 
 Prepare the dataset from the TrueNAS Shell (as root):
 
@@ -186,7 +186,7 @@ The last command must list the options advertised by the selected driver. Easy P
 | `TEMPORARY_PATH is not writable` | `tmpfs` was declared without `uid`, `gid`, and `mode` options | Use the two `tmpfs` declarations shown above, then redeploy |
 | Container restarts with exit 255 | The startup migration fails repeatedly, usually because one of the runtime directories is not writable | Inspect `docker logs`, correct the dataset/tmpfs permissions, and recreate the app |
 | Queue is missing | `CUPS_HOST` is wrong, port 631 is blocked, or CUPS is not sharing the queue | Test `lpstat` from the Easy Print container and confirm the queue in CUPS |
-| Queue is visible but controls are unavailable | `lpoptions` cannot reach the PPD, or an old image rejected valid driver choices | Test `lpoptions` directly and use the latest published image |
+| Queue is visible but controls are unavailable | `lpoptions` cannot reach the PPD, or an old image rejected valid driver choices | Test `lpoptions` directly and use image tag `0.2.0` or newer |
 | Localhost URL is unreachable from another device | `127.0.0.1:8080` intentionally binds only to TrueNAS | Use Tailscale Serve/reverse proxy, or bind a LAN address only behind an appropriate firewall |
 | `latest` did not change after an update | Docker/TrueNAS reused a cached tag | Use a fixed version tag, redeploy, or explicitly pull the new image |
 
