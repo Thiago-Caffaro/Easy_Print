@@ -24,6 +24,7 @@ declare(strict_types=1);
  * @var string                  $englishLabel
  * @var string                  $stylesheetUrl
  * @var string                  $htmxAssetUrl
+ * @var string                  $appAssetUrl
  * @var string                  $activeJobsUrl
  * @var string                  $activeJobsHeading
  * @var string                  $activeJobsLoading
@@ -44,13 +45,24 @@ declare(strict_types=1);
     <title><?= $escape($pageTitle) ?></title>
     <link rel="stylesheet" href="<?= $escape($stylesheetUrl) ?>">
     <script src="<?= $escape($htmxAssetUrl) ?>" defer></script>
+    <script src="<?= $escape($appAssetUrl) ?>" defer></script>
 </head>
 <body>
     <main class="shell">
-        <section class="card" aria-labelledby="page-heading">
-            <p class="eyebrow">Easy Print</p>
-            <h1 id="page-heading"><?= $escape($heading) ?></h1>
-            <p class="description"><?= $escape($description) ?></p>
+        <section class="card app-card" aria-labelledby="page-heading">
+            <header class="app-header">
+                <a class="brand" href="?lang=<?= $escape($locale) ?>" aria-label="Easy Print">
+                    <span class="brand-mark" aria-hidden="true">EP</span>
+                    <span class="brand-name">Easy Print</span>
+                </a>
+                <a class="header-history" href="<?= $escape($historyUrl) ?>"><?= $escape($historyLabel) ?></a>
+            </header>
+
+            <div class="hero-copy">
+                <p class="eyebrow"><?= $escape($cupsValue) ?></p>
+                <h1 id="page-heading"><?= $escape($heading) ?></h1>
+                <p class="description"><?= $escape($description) ?></p>
+            </div>
 
             <dl class="status-grid">
                 <div>
@@ -67,7 +79,7 @@ declare(strict_types=1);
                 </div>
             </dl>
 
-            <section class="queues" aria-labelledby="queues-heading">
+            <section class="queues panel" aria-labelledby="queues-heading">
                 <h2 id="queues-heading"><?= $escape($queuesHeading) ?></h2>
 
                 <?php if ([] === $queues): ?>
@@ -136,10 +148,6 @@ declare(strict_types=1);
                     <p class="empty-state"><?= $escape($printerStatusLoading) ?></p>
                 </section>
             <?php endif; ?>
-
-            <nav class="primary-navigation" aria-label="Easy Print">
-                <a href="<?= $escape($historyUrl) ?>"><?= $escape($historyLabel) ?></a>
-            </nav>
 
             <nav aria-label="<?= $escape($languageLabel) ?>" class="languages">
                 <a href="?lang=pt-BR" lang="pt-BR" hreflang="pt-BR"><?= $escape($portugueseLabel) ?></a>

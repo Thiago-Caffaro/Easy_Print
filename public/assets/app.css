@@ -443,3 +443,346 @@ dd {
         flex-direction: column;
     }
 }
+
+/* Application refresh: calm hierarchy, generous targets, and a guided print flow. */
+body {
+    background:
+        radial-gradient(circle at 0 0, rgb(210 239 229 / 72%), transparent 32rem),
+        #f5f7f9;
+    color: #172033;
+}
+
+.shell {
+    place-items: start center;
+    padding: clamp(1rem, 4vw, 3.5rem) 1rem;
+}
+
+.app-card {
+    width: min(100%, 72rem);
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    border: 0;
+    border-radius: 1.5rem;
+    box-shadow: 0 1.5rem 4rem rgb(31 45 75 / 12%);
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.brand-mark {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: #166534;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+}
+
+.brand-name {
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.header-history {
+    color: #166534;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-underline-offset: 0.2em;
+}
+
+.hero-copy {
+    max-width: 48rem;
+    padding: clamp(2rem, 5vw, 4rem) 0 2rem;
+}
+
+.hero-copy h1 {
+    max-width: 40rem;
+    color: #102a43;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    letter-spacing: -0.045em;
+}
+
+.hero-copy .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+    color: #166534;
+    letter-spacing: 0.08em;
+}
+
+.hero-copy .eyebrow::before {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: #22c55e;
+    content: "";
+}
+
+.description {
+    max-width: 44rem;
+    margin-bottom: 0;
+}
+
+.status-grid {
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.status-grid div {
+    border: 1px solid #e6ebf0;
+    background: #f8fafc;
+}
+
+.panel,
+.print-form,
+.active-jobs,
+.printer-status {
+    padding: clamp(1rem, 2vw, 1.5rem);
+    border: 1px solid #e5eaf0;
+    border-radius: 1.15rem;
+    background: #fff;
+}
+
+.print-form,
+.active-jobs,
+.printer-status {
+    margin-top: 1rem;
+}
+
+.print-form h2,
+.active-jobs h2,
+.printer-status h2,
+.queues h2 {
+    color: #102a43;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+}
+
+.queue-option {
+    min-height: 4.25rem;
+    border-color: #e5eaf0;
+}
+
+.queue-option.is-selected {
+    border-color: #4ade80;
+    background: #f0fdf4;
+}
+
+.print-form-fields {
+    gap: 1.25rem;
+}
+
+.field-queue {
+    max-width: 32rem;
+}
+
+.upload-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(14rem, 0.75fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.upload-dropzone {
+    display: grid;
+    min-height: 12rem;
+    place-content: center;
+    gap: 0.45rem;
+    padding: 1.5rem;
+    border: 1.5px dashed #9ca3af;
+    border-radius: 1rem;
+    background: #f8fafc;
+    color: #334155;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone:focus-within {
+    border-color: #16a34a;
+    background: #f0fdf4;
+    transform: translateY(-1px);
+}
+
+.upload-dropzone input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.upload-icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: 0 auto 0.35rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.upload-title {
+    font-weight: 800;
+}
+
+.file-preview {
+    display: grid;
+    min-height: 12rem;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #e5eaf0;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.file-preview-empty {
+    display: grid;
+    place-items: center;
+    gap: 0.65rem;
+    padding: 1rem;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.preview-icon {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 0.75rem;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.file-preview-card {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    grid-template-rows: 1fr auto;
+}
+
+.file-preview-image {
+    width: 100%;
+    height: 100%;
+    min-height: 8rem;
+    object-fit: contain;
+    background: #eef2f7;
+}
+
+.file-preview-pdf {
+    display: grid;
+    min-height: 8rem;
+    place-items: center;
+    background: #fff1f2;
+    color: #be123c;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.file-preview-details {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.75rem 1rem;
+    background: #fff;
+}
+
+.file-preview-details strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-preview-details small {
+    color: #64748b;
+}
+
+.option-group {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid #e5eaf0;
+    border-radius: 1rem;
+}
+
+.option-group legend {
+    padding: 0 0.35rem;
+    color: #102a43;
+    font-size: 0.95rem;
+    font-weight: 900;
+}
+
+.advanced-options {
+    background: #f8fafc;
+}
+
+.advanced-options summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #334155;
+}
+
+.advanced-options summary small {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.button-primary {
+    width: 100%;
+    min-height: 3.25rem;
+    border-radius: 0.85rem;
+    background: #166534;
+    font-size: 1rem;
+}
+
+.button-primary:hover {
+    background: #14532d;
+}
+
+@media (max-width: 42rem) {
+    .upload-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .file-preview {
+        min-height: 10rem;
+    }
+
+    .advanced-options summary {
+        align-items: start;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

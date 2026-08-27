@@ -82,10 +82,16 @@ final readonly class PrintFormDataFactory
                     'queue' => $t('print.queue'),
                     'document' => $t('print.document'),
                     'document_hint' => $t('print.document_hint'),
+                    'document_empty' => $t('print.document_empty'),
+                    'document_preview' => $t('print.document_preview'),
+                    'quick_options' => $t('print.quick_options'),
+                    'advanced' => $t('print.advanced'),
+                    'advanced_hint' => $t('print.advanced_hint'),
+                    'paper_options' => $t('print.paper_options'),
+                    'preview_empty' => $t('print.preview_empty'),
                     'copies' => $t('print.copies'),
                     'page_range' => $t('print.page_range'),
                     'page_range_hint' => $t('print.page_range_hint'),
-                    'advanced' => $t('print.advanced'),
                     'submit' => $t('print.submit'),
                     'no_queue' => $t('print.no_queue'),
                     'capabilities_unavailable' => $t('print.capabilities_unavailable'),
@@ -106,6 +112,7 @@ final readonly class PrintFormDataFactory
         foreach ($options as $option) {
             $isAdvanced = !in_array($option->category, [
                 CapabilityCategory::MediaSize,
+                CapabilityCategory::MediaType,
                 CapabilityCategory::ColorMode,
                 CapabilityCategory::Quality,
             ], true);
@@ -116,7 +123,7 @@ final readonly class PrintFormDataFactory
 
             $result[] = [
                 'identifier' => $option->technicalIdentifier,
-                'label' => $translate('print.option.' . $option->category->value) . ' — ' . $option->driverLabel,
+                'label' => $translate('print.option.' . $option->category->value),
                 'choices' => array_map(static fn($choice): string => $choice->technicalIdentifier, $option->choices),
                 'default' => $option->defaultTechnicalIdentifier,
             ];

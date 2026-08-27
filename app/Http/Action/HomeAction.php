@@ -78,6 +78,7 @@ final readonly class HomeAction
             'englishLabel' => $t('locale.en'),
             'stylesheetUrl' => $this->config->basePath . '/assets/app.css',
             'htmxAssetUrl' => $this->config->basePath . '/assets/htmx.min.js',
+            'appAssetUrl' => $this->config->basePath . '/assets/app.js',
             'activeJobsUrl' => $this->config->basePath . '/jobs/active?lang=' . rawurlencode($locale),
             'activeJobsHeading' => $t('jobs.heading'),
             'activeJobsLoading' => $t('jobs.loading'),

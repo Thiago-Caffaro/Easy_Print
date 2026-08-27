@@ -32,7 +32,7 @@ declare(strict_types=1);
             <input type="hidden" name="submission_key" value="<?= $escape($submissionKey) ?>">
             <input type="hidden" name="capability_fingerprint" value="<?= $escape($capabilityFingerprint) ?>">
 
-            <div class="field">
+            <div class="field field-queue">
                 <label for="print-queue"><?= $escape($labels['queue']) ?></label>
                 <select
                     id="print-queue"
@@ -51,13 +51,33 @@ declare(strict_types=1);
                 </select>
             </div>
 
-            <div class="field">
-                <label for="print-document"><?= $escape($labels['document']) ?></label>
-                <input id="print-document" name="document" type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" required>
-                <p class="field-hint"><?= $escape($labels['document_hint']) ?></p>
+            <div class="upload-layout">
+                <div class="field upload-field">
+                    <label for="print-document"><?= $escape($labels['document']) ?></label>
+                    <label class="upload-dropzone" for="print-document">
+                        <span class="upload-icon" aria-hidden="true">↑</span>
+                        <span class="upload-title"><?= $escape($labels['document_empty']) ?></span>
+                        <span class="field-hint"><?= $escape($labels['document_hint']) ?></span>
+                        <input id="print-document" name="document" type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" data-preview-image-label="<?= $escape($labels['document_preview']) ?>" required>
+                    </label>
+                </div>
+                <aside
+                    class="file-preview"
+                    id="file-preview"
+                    aria-live="polite"
+                    aria-label="<?= $escape($labels['document_preview']) ?>"
+                    data-empty-label="<?= $escape($labels['preview_empty']) ?>"
+                >
+                    <div class="file-preview-empty">
+                        <span class="preview-icon" aria-hidden="true">□</span>
+                        <span><?= $escape($labels['preview_empty']) ?></span>
+                    </div>
+                </aside>
             </div>
 
-            <div class="form-grid">
+            <fieldset class="option-group">
+                <legend><?= $escape($labels['quick_options']) ?></legend>
+                <div class="form-grid">
                 <div class="field">
                     <label for="print-copies"><?= $escape($labels['copies']) ?></label>
                     <input id="print-copies" name="copies" type="number" min="1" max="999" value="1" required>
@@ -67,15 +87,21 @@ declare(strict_types=1);
                     <input id="print-page-range" name="page_range" type="text" inputmode="numeric" pattern="[0-9,-]*" maxlength="512">
                     <p class="field-hint"><?= $escape($labels['page_range_hint']) ?></p>
                 </div>
-            </div>
+                </div>
+            </fieldset>
 
-            <?php foreach ($basicOptions as $option): ?>
-                <?php require __DIR__ . '/partials/capability-select.php'; ?>
-            <?php endforeach; ?>
+            <?php if ([] !== $basicOptions): ?>
+                <fieldset class="option-group">
+                    <legend><?= $escape($labels['paper_options']) ?></legend>
+                    <?php foreach ($basicOptions as $option): ?>
+                        <?php require __DIR__ . '/partials/capability-select.php'; ?>
+                    <?php endforeach; ?>
+                </fieldset>
+            <?php endif; ?>
 
             <?php if ([] !== $advancedOptions): ?>
                 <details class="advanced-options">
-                    <summary><?= $escape($labels['advanced']) ?></summary>
+                    <summary><span><?= $escape($labels['advanced']) ?></span><small><?= $escape($labels['advanced_hint']) ?></small></summary>
                     <?php foreach ($advancedOptions as $option): ?>
                         <?php require __DIR__ . '/partials/capability-select.php'; ?>
                     <?php endforeach; ?>
